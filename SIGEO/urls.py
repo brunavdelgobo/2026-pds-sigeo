@@ -18,5 +18,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("", views.login_view, name="login"), # Rota principal vai pro login
+    path("login/", views.login_view, name="login"),
+    path("logout/", views.logout_view, name="logout"),
     path("registrar/", views.registrar, name="registrar"),
+    path("painel/", views.painel, name="painel"),
 ]

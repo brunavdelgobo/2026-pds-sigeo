@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mt-5">
+    <h2>Você está logado! 🎉</h2>
+    <p class="lead">Bem-vindo(a), <strong>{{ nome }}</strong>!</p>
+    <p>Seu perfil de acesso é: <span class="badge bg-primary">{{ perfil }}</span></p>
+    
+    <hr class="my-4">
+    
+    <a href="/logout/" class="btn btn-danger">Sair (Logout)</a>
+</div>
+{% endblock %}

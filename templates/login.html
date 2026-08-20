@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm p-4">
+            <h3 class="text-center mb-4">Entrar no SIGEO</h3>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Senha</label>
+                    <input type="password" name="senha" class="form-control" required>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Entrar</button>
+            </form>
+            
+            {% if erro %}
+            <div class="alert alert-danger mt-3">{{ erro }}</div>
+            {% endif %}
+
+            <p class="mt-3 text-center">
+                <a href="/registrar/">Criar uma conta</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
