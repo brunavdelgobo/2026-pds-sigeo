@@ -18,7 +18,7 @@ https://1drv.ms/w/c/a0cd463b0888c876/IQDI3pB_cElHR4pPq7Z6g2hmATMiiPAhQgJv5ccJMGu
 ## 📂 Arquivos desta entrega
 
 * `README.md` — identificação e organização da Entrega 2.
-* `2026-pds-sigeo_projetofinal.pdf` — documento do Projeto Final contendo a Capa, a Folha de Rosto e o Capítulo 1 — Introdução.
+* `2026-pds-SIGEO_projetoFinal.pdf` — documento do Projeto Final contendo a Capa, a Folha de Rosto e o Capítulo 1 — Introdução.
 
 ## ✍️ Responsáveis por esta entrega
 
