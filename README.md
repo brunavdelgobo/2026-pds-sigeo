@@ -61,7 +61,7 @@
 ├── manage.py  ← arquivo de gerenciamento do projeto Django
 ├── db.sqlite3  ← banco de dados SQLite utilizado durante o desenvolvimento
 └── .idea/  ← configurações do ambiente de desenvolvimento PyCharm
-
+```
 ---
 
 ## 📦 Entregas do 2º Trimestre (status)
@@ -73,7 +73,7 @@
 | E2 | Capa, Folha de Rosto e Introdução                 | 10%  | X Feito | `docs/E2-introducao/`                      |
 | E3 | Fundamentação Teórica                             | 10%  | X Feito | `docs/E3-fundamentacao-teorica/`           |
 | E4 | Metodologia / Materiais e Métodos                 | 10%  | X Feito | `docs/E4-metodologia/`                     |
-| E5 | Desenvolvimento do Sistema                        | 30%  | X Feito | `docs/E5-desenvolvimento/` + `src/`        |
+| E5 | Desenvolvimento do Sistema                        | 30%  | X Feito | docs/E5-desenvolvimento/ + `SIGEO/`        |
 
 ---
 
