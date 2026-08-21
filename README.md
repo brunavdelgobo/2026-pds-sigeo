@@ -45,7 +45,7 @@
 
 ```text
 .
-├── README.md  ← este arquivo (identificação + links)
+├── README.md  ← identificação + links do projeto
 ├── docs/  ← documentação do Projeto Final (entregas)
 │   ├── E1-pre-projeto-corrigido/
 │   ├── aprovacao-e-termos-de-concordancia/
@@ -53,10 +53,14 @@
 │   ├── E3-fundamentacao-teorica/
 │   ├── E4-metodologia/
 │   └── E5-desenvolvimento/
-├── diagramas/  ← .drawio + exportações PNG/SVG
-├── prototipos/  ← exportações/links do Figma
-└── src/  ← código-fonte do sistema
-```
+├── diagramas/  ← arquivos .drawio + exportações PNG/SVG
+├── prototipos/  ← protótipos das interfaces do sistema
+│
+├── SIGEO/  ← código e configurações principais do projeto Django
+├── templates/  ← templates HTML utilizados pelo sistema
+├── manage.py  ← arquivo de gerenciamento do projeto Django
+├── db.sqlite3  ← banco de dados SQLite utilizado durante o desenvolvimento
+└── .idea/  ← configurações do ambiente de desenvolvimento PyCharm
 
 ---
 
