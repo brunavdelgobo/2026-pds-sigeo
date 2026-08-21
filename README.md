@@ -22,7 +22,7 @@
 
 | O quê                                       | Link                                                                                          |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 📄 **Documento do Projeto Final (público)** | https://1drv.ms/w/c/a0cd463b0888c876/IQDI3pB_cElHR4pPq7Z6g2hmATMiiPAhQgJv5ccJMGunZ14?e=sRYlvt |
+| 📄 **Documento do Projeto Final (público)** | https://1drv.ms/w/c/a0cd463b0888c876/IQDI3pB_cElHR4pPq7Z6g2hmAccUdfD-n2-_-tq0zxciGrM?e=ZuEcAc |
 | 🖥️ Sistema / deploy (se já houver)         | Em desenvolvimento                                                                            |
 | 🎨 Protótipo no Figma                       | Ainda não disponível                                                                          |
 | 📋 Quadro de gestão (ClickUp)               | Ainda não disponível                                                                          |
