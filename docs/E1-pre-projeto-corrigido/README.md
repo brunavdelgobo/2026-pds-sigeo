@@ -37,11 +37,11 @@ A equipe participou de forma colaborativa na elaboração, revisão e adequaçã
 
 ## ✅ Checklist antes de marcar como concluída
 
-* ☐ Conteúdo na pasta certa e nomeado sem acento/espaço.
-* ☐ Link do documento público atualizado e **acessível** (testado em aba anônima).
-* ☐ Tempo verbal adequado (**passado** — o projeto já foi desenvolvido; ≠ pré-projeto, que era futuro).
-* ☐ Correções da banca aplicadas.
-* ☐ Diagramas com `.drawio` **e** export PNG/SVG (quando aplicável).
-* ☐ Normas ABNT/IFPR conferidas (citações e referências).
-* ☐ Status atualizado no `README.md` da raiz (⬜ → ✅).
+* ✅ Conteúdo na pasta certa e nomeado sem acento/espaço.
+* ✅ Link do documento público atualizado e **acessível** (testado em aba anônima).
+* ✅ Tempo verbal adequado (**futuro**, uma vez que é um pré-projeto).
+* ✅ Correções da banca aplicadas.
+* ✅ Diagramas com `.drawio` **e** export PNG/SVG (quando aplicável).
+* ✅ Normas ABNT/IFPR conferidas (citações e referências).
+* ✅ Status atualizado no `README.md` da raiz (⬜ → ✅).
 
