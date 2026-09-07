@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Empréstimos - SIGEO</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        h1 { color: #2c3e50; }
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { background: #27ae60; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
+        .btn:hover { background: #219653; }
+    </style>
+</head>
+<body>
+    <h1>Catálogo de Acervo Disponível</h1>
+    <p>Escolha um objeto abaixo para solicitar o empréstimo:</p>
+
+    <hr style="margin-bottom: 20px;">
+
+    {% for obj in objetos %}
+        <div class="card">
+            <h3>{{ obj.nome_objeto }}</h3>
+            <p><strong>Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}</p>
+            <p><strong>Categoria:</strong> {{ obj.categoria.nome_categoria }}</p>
+            <p><strong>Condição:</strong> {{ obj.get_condicao_display }}</p>
+            <p><strong>Descrição:</strong> {{ obj.descricao|default:"Sem descrição cadastrada." }}</p>
+
+            <a href="#" class="btn">Solicitar Empréstimo</a>
+        </div>
+    {% empty %}
+        <p>Nenhum objeto disponível no momento.</p>
+    {% endfor %}
+
+    <br>
+    <a href="{% url 'painel' %}">Voltar para o Painel</a>
+</body>
+</html>

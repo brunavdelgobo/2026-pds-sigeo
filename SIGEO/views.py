@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
+from .models import Objeto
 
 
 def registrar(request):
@@ -50,3 +51,14 @@ def painel(request):
         "perfil": request.user.perfil
     }
     return render(request, "bemvindo.html", contexto)
+
+
+@login_required(login_url='/login/')
+def catalogo_objetos(request):
+    # Busca apenas os objetos que estão disponíveis para empréstimo
+    objetos_disponiveis = Objeto.objects.filter(status='DISPONIVEL')
+
+    contexto = {
+        'objetos': objetos_disponiveis
+    }
+    return render(request, 'catalogo.html', contexto)
