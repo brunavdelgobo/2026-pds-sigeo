@@ -1,54 +1,52 @@
 from django.shortcuts import render, redirect
-from .models import Usuario
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
+
 
 def registrar(request):
     if request.method == "POST":
         form = UsuarioForm(request.POST)
         if form.is_valid():
+            # O save() agora usa a lógica do nosso UsuarioManager e criptografa a senha sozinho
             usuario = form.save(commit=False)
             usuario.set_password(form.cleaned_data["senha"])
             usuario.save()
-            return redirect("login") # Por enquanto redireciona pra ele mesmo
+            return redirect("login")
     else:
         form = UsuarioForm()
     return render(request, "registrar.html", {"form": form})
 
-
-# Mude o finalzinho da função registrar para:
-# return redirect("login")
 
 def login_view(request):
     erro = None
     if request.method == "POST":
         email = request.POST.get("email")
         senha = request.POST.get("senha")
-        try:
-            usuario = Usuario.objects.get(email=email)
-            if usuario.check_password(senha):
-                # Cria a sessão
-                request.session['usuario_id'] = usuario.id
-                request.session['usuario_nome'] = usuario.nome_completo
-                request.session['usuario_perfil'] = usuario.perfil  # Já guarda o perfil!
-                return redirect("painel")
-            else:
-                erro = "Senha incorreta."
-        except Usuario.DoesNotExist:
-            erro = "Email não encontrado."
+
+        # O Django compara a senha digitada com o hash salvo no banco automaticamente
+        usuario = authenticate(request, username=email, password=senha)
+
+        if usuario is not None:
+            login(request, usuario)  # Cria a sessão segura nativa
+            return redirect("painel")
+        else:
+            erro = "Email ou senha incorretos."
+
     return render(request, "login.html", {"erro": erro})
 
 
 def logout_view(request):
-    request.session.flush()  # Limpa a sessão
+    logout(request)  # Destrói a sessão nativa com segurança
     return redirect("login")
 
 
+# Este decorador atende ao seu RNF02 (Controle de Acesso no backend)
+@login_required(login_url='/login/')
 def painel(request):
-    if 'usuario_id' not in request.session:
-        return redirect("login")
-
+    # O Django injeta o usuário logado no request.user
     contexto = {
-        "nome": request.session['usuario_nome'],
-        "perfil": request.session['usuario_perfil']
+        "nome": request.user.nome_completo,
+        "perfil": request.user.perfil
     }
     return render(request, "bemvindo.html", contexto)
