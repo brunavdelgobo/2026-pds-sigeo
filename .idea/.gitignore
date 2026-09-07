@@ -6,3 +6,10 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+# Python / Django cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+db.sqlite3
+.idea/
