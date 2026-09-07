@@ -1,8 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
-from .models import Objeto
+from .models import Objeto, Emprestimo, ItemEmprestimo
+import uuid
+from django.utils import timezone
+from datetime import timedelta
 
 
 def registrar(request):
@@ -62,3 +65,38 @@ def catalogo_objetos(request):
         'objetos': objetos_disponiveis
     }
     return render(request, 'catalogo.html', contexto)
+
+
+@login_required(login_url='/login/')
+def solicitar_emprestimo(request, objeto_id):
+    # Busca o objeto ou retorna erro 404 se não existir
+    objeto = get_object_or_404(Objeto, id=objeto_id, status='DISPONIVEL')
+
+    # Define a data de expiração da solicitação (ex: 24 horas para retirar)
+    data_exp = timezone.now() + timedelta(days=1)
+
+    # Gera um código de validação curto aleatório
+    codigo_val = str(uuid.uuid4())[:8].upper()
+
+    # Cria o Empréstimo principal
+    emprestimo = Emprestimo.objects.create(
+        usuario=request.user,
+        data_expiracao=data_exp,
+        cg_validacao=codigo_val,
+        status_geral='PENDENTE'
+    )
+
+    # Cria o Item do Empréstimo vinculando o objeto
+    prazo_devolucao = timezone.now() + timedelta(days=objeto.categoria.prazo_dias)
+    ItemEmprestimo.objects.create(
+        emprestimo=emprestimo,
+        objeto=objeto,
+        data_devolucao_prevista=prazo_devolucao,
+        status_item='AGUARDANDO_RETIRADA'
+    )
+
+    # Altera o status do objeto para emprestado/reservado
+    objeto.status = 'EMPRESTADO'
+    objeto.save()
+
+    return redirect('catalogo')

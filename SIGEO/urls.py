@@ -26,4 +26,5 @@ urlpatterns = [
     path("registrar/", views.registrar, name="registrar"),
     path("painel/", views.painel, name="painel"),
     path('catalogo/', views.catalogo_objetos, name='catalogo'),
+path('solicitar/<int:objeto_id>/', views.solicitar_emprestimo, name='solicitar_emprestimo'),
 ]

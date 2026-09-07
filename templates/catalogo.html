@@ -25,7 +25,7 @@
             <p><strong>Condição:</strong> {{ obj.get_condicao_display }}</p>
             <p><strong>Descrição:</strong> {{ obj.descricao|default:"Sem descrição cadastrada." }}</p>
 
-            <a href="#" class="btn">Solicitar Empréstimo</a>
+            <a href="{% url 'solicitar_emprestimo' obj.id %}" class="btn">Solicitar Empréstimo</a>
         </div>
     {% empty %}
         <p>Nenhum objeto disponível no momento.</p>
