@@ -2,10 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
-from .models import Objeto, Emprestimo, ItemEmprestimo
+from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria
 import uuid
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Q
 
 
 def registrar(request):
@@ -66,15 +67,36 @@ def painel(request):
 
 
 @login_required(login_url='/login/')
+@login_required(login_url='/login/')
 def catalogo_objetos(request):
-    # Busca apenas os objetos que estão disponíveis para empréstimo
+    # Começa pegando todos os disponíveis
     objetos_disponiveis = Objeto.objects.filter(status='DISPONIVEL')
+    categorias = Categoria.objects.all()
+
+    # Pega o que o usuário digitou na barra de busca e o filtro de categoria
+    query = request.GET.get('q')
+    categoria_id = request.GET.get('categoria')
+
+    # Filtra por texto (busca no nome, descrição ou patrimônio)
+    if query:
+        objetos_disponiveis = objetos_disponiveis.filter(
+            Q(nome_objeto__icontains=query) |
+            Q(descricao__icontains=query) |
+            Q(cg_patrimonio__icontains=query)
+        )
+
+    # Filtra pela categoria selecionada
+    if categoria_id:
+        objetos_disponiveis = objetos_disponiveis.filter(categoria_id=categoria_id)
 
     contexto = {
-        'objetos': objetos_disponiveis
+        'objetos': objetos_disponiveis,
+        'categorias': categorias,
+        'busca_atual': query,
+        # Converte para string para o HTML conseguir marcar como 'selecionado'
+        'categoria_atual': str(categoria_id) if categoria_id else ''
     }
     return render(request, 'catalogo.html', contexto)
-
 
 @login_required(login_url='/login/')
 def solicitar_emprestimo(request, objeto_id):
