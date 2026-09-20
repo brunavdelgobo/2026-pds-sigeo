@@ -84,14 +84,16 @@ def solicitar_emprestimo(request, objeto_id):
     # Define a data de expiração da solicitação (ex: 24 horas para retirar)
     data_exp = timezone.now() + timedelta(days=1)
 
-    # Gera um código de validação curto aleatório
-    codigo_val = str(uuid.uuid4())[:8].upper()
+    # Gera códigos únicos de retirada e devolução (8 caracteres)
+    cod_retirada = str(uuid.uuid4())[:8].upper()
+    cod_devolucao = str(uuid.uuid4())[:8].upper()
 
-    # Cria o Empréstimo principal
+    # Cria o Empréstimo principal com os novos códigos
     emprestimo = Emprestimo.objects.create(
         usuario=request.user,
         data_expiracao=data_exp,
-        cg_validacao=codigo_val,
+        codigo_retirada=cod_retirada,
+        codigo_devolucao=cod_devolucao,
         status_geral='PENDENTE'
     )
 
@@ -108,4 +110,4 @@ def solicitar_emprestimo(request, objeto_id):
     objeto.status = 'EMPRESTADO'
     objeto.save()
 
-    return redirect('catalogo')
+    return redirect('painel')

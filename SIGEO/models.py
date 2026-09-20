@@ -91,7 +91,8 @@ class Emprestimo(models.Model):
     usuario = models.ForeignKey(Usuario, on_delete=models.PROTECT, related_name='emprestimos')
     data_solicitacao = models.DateTimeField(auto_now_add=True)
     data_expiracao = models.DateTimeField()
-    cg_validacao = models.CharField(max_length=10, unique=True)
+    codigo_retirada = models.CharField(max_length=10, unique=True, null=True, blank=True)
+    codigo_devolucao = models.CharField(max_length=10, unique=True, null=True, blank=True)
     status_geral = models.CharField(max_length=15, choices=STATUS_GERAL, default='PENDENTE')
 
     def __str__(self):
