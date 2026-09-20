@@ -157,3 +157,15 @@ def validar_codigo(request):
                 cor_mensagem = "danger"
 
     return render(request, 'validar_codigo.html', {'mensagem': mensagem, 'cor_mensagem': cor_mensagem})
+
+
+@login_required(login_url='/login/')
+def gerenciar_emprestimos(request):
+    # Bloqueia se não for funcionário
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    # Puxa todos os empréstimos do sistema, do mais recente para o mais antigo
+    todos_emprestimos = Emprestimo.objects.all().order_by('-id')
+
+    return render(request, 'gerenciar_emprestimos.html', {'emprestimos': todos_emprestimos})

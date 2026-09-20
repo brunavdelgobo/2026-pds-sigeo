@@ -29,10 +29,14 @@
                 </ul>
 
                 <!-- Links da Direita -->
+               <!-- Links da Direita -->
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <!-- Atalho para você acessar o Admin rapidamente se for superusuária -->
                         {% if user.is_staff %}
+                            <li class="nav-item">
+                                <a class="nav-link text-success" href="{% url 'gerenciar_emprestimos' %}">Todos os Empréstimos</a>
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link text-info" href="{% url 'validar_codigo' %}">Validar Códigos</a>
                             </li>
