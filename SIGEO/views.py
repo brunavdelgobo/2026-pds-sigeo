@@ -23,6 +23,8 @@ def registrar(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('painel')
     erro = None
     if request.method == "POST":
         email = request.POST.get("email")
@@ -48,12 +50,19 @@ def logout_view(request):
 # Este decorador atende ao seu RNF02 (Controle de Acesso no backend)
 @login_required(login_url='/login/')
 def painel(request):
-    # O Django injeta o usuário logado no request.user
+    # Filtra apenas os empréstimos do usuário logado e ordena do mais recente para o mais antigo
+    meus_emprestimos = Emprestimo.objects.filter(usuario=request.user).order_by('-id')
+
+    # Verifica se o usuário é administrador ou solicitante comum
+    perfil_usuario = 'Administrador' if request.user.is_staff else 'Solicitante'
+
     contexto = {
-        "nome": request.user.nome_completo,
-        "perfil": request.user.perfil
+        'nome': request.user.nome_completo,  # Usa o campo nome_completo que você criou no seu model
+        'perfil': perfil_usuario,
+        'emprestimos': meus_emprestimos
     }
-    return render(request, "bemvindo.html", contexto)
+
+    return render(request, 'painel.html', contexto)
 
 
 @login_required(login_url='/login/')
