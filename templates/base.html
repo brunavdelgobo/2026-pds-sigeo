@@ -34,6 +34,9 @@
                         <!-- Atalho para você acessar o Admin rapidamente se for superusuária -->
                         {% if user.is_staff %}
                             <li class="nav-item">
+                                <a class="nav-link text-info" href="{% url 'validar_codigo' %}">Validar Códigos</a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link text-warning" href="/admin/" target="_blank">Admin</a>
                             </li>
                         {% endif %}

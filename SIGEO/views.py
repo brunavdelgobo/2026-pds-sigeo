@@ -111,3 +111,49 @@ def solicitar_emprestimo(request, objeto_id):
     objeto.save()
 
     return redirect('painel')
+
+
+@login_required(login_url='/login/')
+def validar_codigo(request):
+    # Se não for funcionário/admin, manda de volta pro painel
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    mensagem = None
+    cor_mensagem = "info"
+
+    if request.method == "POST":
+        codigo = request.POST.get("codigo").strip().upper()
+
+        # 1. Verifica se é um código de RETIRADA
+        emprestimo_retirada = Emprestimo.objects.filter(codigo_retirada=codigo, status_geral='PENDENTE').first()
+
+        if emprestimo_retirada:
+            emprestimo_retirada.status_geral = 'ATIVO'  # Altera o status do empréstimo
+            emprestimo_retirada.save()
+
+            mensagem = f"Retirada confirmada! Objeto liberado para {emprestimo_retirada.usuario.nome_completo}."
+            cor_mensagem = "success"
+
+        else:
+            # 2. Se não for retirada, verifica se é um código de DEVOLUÇÃO
+            emprestimo_devolucao = Emprestimo.objects.filter(codigo_devolucao=codigo, status_geral='ATIVO').first()
+
+            if emprestimo_devolucao:
+                emprestimo_devolucao.status_geral = 'CONCLUIDO'
+                emprestimo_devolucao.save()
+
+                # Libera o objeto para o catálogo novamente
+                item = ItemEmprestimo.objects.filter(emprestimo=emprestimo_devolucao).first()
+                if item and item.objeto:
+                    item.objeto.status = 'DISPONIVEL'
+                    item.objeto.save()
+
+                mensagem = f"Devolução confirmada! Objeto retornado por {emprestimo_devolucao.usuario.nome_completo}."
+                cor_mensagem = "success"
+
+            else:
+                mensagem = "Código inválido, expirado ou não encontrado no sistema."
+                cor_mensagem = "danger"
+
+    return render(request, 'validar_codigo.html', {'mensagem': mensagem, 'cor_mensagem': cor_mensagem})

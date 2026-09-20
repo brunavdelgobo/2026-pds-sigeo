@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Validação de Retirada / Devolução</h4>
+            </div>
+            <div class="card-body text-center p-5">
+                <p class="lead">Digite ou bip o código apresentado pelo aluno:</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="input-group input-group-lg mb-3">
+                        <input type="text" name="codigo" class="form-control font-monospace text-center text-uppercase" placeholder="EX: A1B2C3D4" required autofocus autocomplete="off">
+                        <button class="btn btn-primary" type="submit">Processar</button>
+                    </div>
+                </form>
+
+                {% if mensagem %}
+                    <div class="alert alert-{{ cor_mensagem }} mt-4" role="alert">
+                        <strong>{{ mensagem }}</strong>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
