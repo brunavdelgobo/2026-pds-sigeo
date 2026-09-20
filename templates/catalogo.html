@@ -1,37 +1,34 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Catálogo de Empréstimos - SIGEO</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
-        h1 { color: #2c3e50; }
-        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn { background: #27ae60; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px; }
-        .btn:hover { background: #219653; }
-    </style>
-</head>
-<body>
-    <h1>Catálogo de Acervo Disponível</h1>
-    <p>Escolha um objeto abaixo para solicitar o empréstimo:</p>
+{% extends 'base.html' %}
 
-    <hr style="margin-bottom: 20px;">
+{% block content %}
+<div class="mt-4">
+    <h1 class="text-primary">Catálogo de Acervo Disponível</h1>
+    <p class="lead">Escolha um objeto abaixo para solicitar o empréstimo:</p>
+    <hr>
 
-    {% for obj in objetos %}
-        <div class="card">
-            <h3>{{ obj.nome_objeto }}</h3>
-            <p><strong>Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}</p>
-            <p><strong>Categoria:</strong> {{ obj.categoria.nome_categoria }}</p>
-            <p><strong>Condição:</strong> {{ obj.get_condicao_display }}</p>
-            <p><strong>Descrição:</strong> {{ obj.descricao|default:"Sem descrição cadastrada." }}</p>
-
-            <a href="{% url 'solicitar_emprestimo' obj.id %}" class="btn">Solicitar Empréstimo</a>
-        </div>
-    {% empty %}
-        <p>Nenhum objeto disponível no momento.</p>
-    {% endfor %}
-
-    <br>
-    <a href="{% url 'painel' %}">Voltar para o Painel</a>
-</body>
-</html>
+    <div class="row">
+        {% for obj in objetos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ obj.nome_objeto }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ obj.categoria.nome_categoria }}</h6>
+                        <p class="card-text">
+                            <strong>Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}<br>
+                            <strong>Condição:</strong> {{ obj.get_condicao_display }}<br>
+                            <strong>Descrição:</strong> {{ obj.descricao|default:"Sem descrição cadastrada." }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <a href="{% url 'solicitar_emprestimo' obj.id %}" class="btn btn-success w-100">Solicitar Empréstimo</a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-warning">Nenhum objeto disponível no momento.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
