@@ -19,6 +19,7 @@
                     <th>Data de Expiração</th>
                     <th class="text-center">Código de Retirada</th>
                     <th class="text-center">Código de Devolução</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -27,17 +28,18 @@
                     <td>
                         {% if emp.status_geral == 'PENDENTE' %}
                             <span class="badge bg-warning text-dark">{{ emp.status_geral }}</span>
-                        {% elif emp.status_geral == 'APROVADO' %}
+                        {% elif emp.status_geral == 'APROVADO' or emp.status_geral == 'ATIVO' %}
                             <span class="badge bg-success">{{ emp.status_geral }}</span>
+                        {% elif emp.status_geral == 'CANCELADO' %}
+                            <span class="badge bg-danger">{{ emp.status_geral }}</span>
                         {% else %}
                             <span class="badge bg-secondary">{{ emp.status_geral }}</span>
                         {% endif %}
                     </td>
                     <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
 
-                    <!-- Coluna do Código e QR Code de Retirada -->
                     <td class="text-center">
-                        {% if emp.codigo_retirada %}
+                        {% if emp.codigo_retirada and emp.status_geral != 'CANCELADO' %}
                             <div class="qrcode mx-auto mb-2" data-text="{{ emp.codigo_retirada }}" style="width: 100px; height: 100px;"></div>
                             <strong class="text-uppercase font-monospace">{{ emp.codigo_retirada }}</strong>
                         {% else %}
@@ -45,11 +47,18 @@
                         {% endif %}
                     </td>
 
-                    <!-- Coluna do Código e QR Code de Devolução -->
                     <td class="text-center">
-                        {% if emp.codigo_devolucao %}
+                        {% if emp.codigo_devolucao and emp.status_geral != 'CANCELADO' %}
                             <div class="qrcode mx-auto mb-2" data-text="{{ emp.codigo_devolucao }}" style="width: 100px; height: 100px;"></div>
                             <strong class="text-uppercase font-monospace">{{ emp.codigo_devolucao }}</strong>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="text-center">
+                        {% if emp.status_geral == 'PENDENTE' %}
+                            <a href="{% url 'cancelar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja cancelar este pedido? O objeto voltará para o catálogo.')">Cancelar</a>
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}
@@ -57,7 +66,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="text-center py-4 text-muted">
+                    <td colspan="5" class="text-center py-4 text-muted">
                         Você ainda não possui nenhuma solicitação de empréstimo.<br>
                         <a href="{% url 'catalogo' %}" class="btn btn-sm btn-primary mt-2">Acessar Catálogo</a>
                     </td>

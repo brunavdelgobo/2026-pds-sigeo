@@ -169,3 +169,24 @@ def gerenciar_emprestimos(request):
     todos_emprestimos = Emprestimo.objects.all().order_by('-id')
 
     return render(request, 'gerenciar_emprestimos.html', {'emprestimos': todos_emprestimos})
+
+
+@login_required(login_url='/login/')
+def cancelar_emprestimo(request, emprestimo_id):
+    # Busca o empréstimo garantindo que pertence ao usuário logado e está pendente
+    emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user, status_geral='PENDENTE')
+
+    # Atualiza o status do empréstimo
+    emprestimo.status_geral = 'CANCELADO'
+    emprestimo.save()
+
+    # Devolve o objeto para o catálogo
+    item = ItemEmprestimo.objects.filter(emprestimo=emprestimo).first()
+    if item and item.objeto:
+        item.status_item = 'CANCELADO'
+        item.save()
+
+        item.objeto.status = 'DISPONIVEL'
+        item.objeto.save()
+
+    return redirect('painel')
