@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Avaliação de Devolução</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Objeto: {{ objeto.nome_objeto }}</h5>
+                <h6 class="card-subtitle mb-3 text-muted">Patrimônio: {{ objeto.cg_patrimonio|default:"Não informado" }}</h6>
+                
+                <p>Aluno responsável: <strong>{{ emprestimo.usuario.nome_completo }}</strong></p>
+                <hr>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="condicao" class="form-label fw-bold">Como o objeto está sendo devolvido?</label>
+                        <select name="condicao" id="condicao" class="form-select form-select-lg" required>
+                            <option value="">-- Selecione o estado atual --</option>
+                            {% for sigla, descricao in condicoes %}
+                                <!-- Marca a condição antiga do objeto como selecionada por padrão -->
+                                <option value="{{ sigla }}" {% if objeto.condicao == sigla %}selected{% endif %}>
+                                    {{ descricao }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Se marcado como "Com Avaria", o objeto será enviado automaticamente para Manutenção e não aparecerá no catálogo.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="observacao" class="form-label fw-bold">Observações Adicionais (opcional)</label>
+                        <textarea name="observacao" id="observacao" rows="3" class="form-control" placeholder="Descreva se está faltando alguma peça, se há riscos, etc."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{% url 'validar_codigo' %}" class="btn btn-secondary">Cancelar e Voltar</a>
+                        <button type="submit" class="btn btn-success">Concluir Devolução</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

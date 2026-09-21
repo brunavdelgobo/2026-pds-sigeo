@@ -30,4 +30,5 @@ urlpatterns = [
     path('solicitar/<int:objeto_id>/', views.solicitar_emprestimo, name='solicitar_emprestimo'),
     path('gerenciar/', views.gerenciar_emprestimos, name='gerenciar_emprestimos'),
     path('cancelar/<int:emprestimo_id>/', views.cancelar_emprestimo, name='cancelar_emprestimo'),
+    path('avaliar-devolucao/<int:emprestimo_id>/', views.avaliar_devolucao, name='avaliar_devolucao'),
 ]

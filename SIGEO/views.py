@@ -162,24 +162,14 @@ def validar_codigo(request):
             emprestimo_devolucao = Emprestimo.objects.filter(codigo_devolucao=codigo, status_geral='ATIVO').first()
 
             if emprestimo_devolucao:
-                emprestimo_devolucao.status_geral = 'CONCLUIDO'
-                emprestimo_devolucao.save()
-
-                # Libera o objeto para o catálogo novamente
-                item = ItemEmprestimo.objects.filter(emprestimo=emprestimo_devolucao).first()
-                if item and item.objeto:
-                    item.objeto.status = 'DISPONIVEL'
-                    item.objeto.save()
-
-                mensagem = f"Devolução confirmada! Objeto retornado por {emprestimo_devolucao.usuario.nome_completo}."
-                cor_mensagem = "success"
+                # AQUI ACONTECE A MÁGICA: Em vez de concluir, redireciona para a tela de avaliação!
+                return redirect('avaliar_devolucao', emprestimo_id=emprestimo_devolucao.id)
 
             else:
                 mensagem = "Código inválido, expirado ou não encontrado no sistema."
                 cor_mensagem = "danger"
 
     return render(request, 'validar_codigo.html', {'mensagem': mensagem, 'cor_mensagem': cor_mensagem})
-
 
 @login_required(login_url='/login/')
 def gerenciar_emprestimos(request):
@@ -212,3 +202,52 @@ def cancelar_emprestimo(request, emprestimo_id):
         item.objeto.save()
 
     return redirect('painel')
+
+
+@login_required(login_url='/login/')
+def avaliar_devolucao(request, emprestimo_id):
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    # Busca o empréstimo e o objeto vinculado
+    emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, status_geral='ATIVO')
+    item = ItemEmprestimo.objects.filter(emprestimo=emprestimo).first()
+    objeto = item.objeto if item else None
+
+    if request.method == 'POST':
+        nova_condicao = request.POST.get('condicao')
+        observacao = request.POST.get('observacao')  # Caso você queira salvar isso no model futuramente
+
+        # Atualiza a condição do objeto
+        objeto.condicao = nova_condicao
+
+        # Agora o código usa exatamente a sigla que está no seu models.py
+        if nova_condicao == 'AVARIADO':
+            objeto.status = 'MANUTENCAO'
+        else:
+            objeto.status = 'DISPONIVEL'
+
+        objeto.save()
+
+        # Conclui o empréstimo
+        emprestimo.status_geral = 'CONCLUIDO'
+        emprestimo.save()
+
+        if item:
+            item.status_item = 'DEVOLVIDO'
+            item.save()
+
+        # Retorna para a tela de bipar código com mensagem de sucesso
+        return render(request, 'validar_codigo.html', {
+            'mensagem': f"Devolução concluída! {objeto.nome_objeto} agora está como: {objeto.get_status_display()}.",
+            'cor_mensagem': 'success'
+        })
+
+    # Pega dinamicamente as opções de condição que você criou lá no models.py
+    opcoes_condicao = Objeto._meta.get_field('condicao').choices
+
+    return render(request, 'avaliar_devolucao.html', {
+        'emprestimo': emprestimo,
+        'objeto': objeto,
+        'condicoes': opcoes_condicao
+    })
