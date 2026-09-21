@@ -201,24 +201,22 @@ def gerenciar_emprestimos(request):
 
 @login_required(login_url='/login/')
 def cancelar_emprestimo(request, emprestimo_id):
-    # Busca o empréstimo garantindo que pertence ao usuário logado e está pendente
     emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user, status_geral='PENDENTE')
 
-    # Atualiza o status do empréstimo
     emprestimo.status_geral = 'CANCELADO'
     emprestimo.save()
 
-    # Devolve o objeto para o catálogo
-    item = ItemEmprestimo.objects.filter(emprestimo=emprestimo).first()
-    if item and item.objeto:
+    # AGORA BUSCAMOS TODOS OS ITENS DO PEDIDO E NÃO SÓ O PRIMEIRO
+    itens = ItemEmprestimo.objects.filter(emprestimo=emprestimo)
+    for item in itens:
         item.status_item = 'CANCELADO'
         item.save()
 
-        item.objeto.status = 'DISPONIVEL'
-        item.objeto.save()
+        if item.objeto:
+            item.objeto.status = 'DISPONIVEL'
+            item.objeto.save()
 
     return redirect('painel')
-
 
 @login_required(login_url='/login/')
 def avaliar_devolucao(request, emprestimo_id):

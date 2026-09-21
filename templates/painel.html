@@ -16,9 +16,10 @@
             <thead class="table-dark">
                 <tr>
                     <th>Status</th>
+                    <th>Itens Solicitados</th> <!-- Nova Coluna -->
                     <th>Data de Expiração</th>
-                    <th class="text-center">Código de Retirada</th>
-                    <th class="text-center">Código de Devolução</th>
+                    <th class="text-center">Cód. Retirada</th>
+                    <th class="text-center">Cód. Devolução</th>
                     <th class="text-center">Ações</th>
                 </tr>
             </thead>
@@ -29,28 +30,61 @@
                         {% if emp.status_geral == 'PENDENTE' %}
                             <span class="badge bg-warning text-dark">{{ emp.status_geral }}</span>
                         {% elif emp.status_geral == 'APROVADO' or emp.status_geral == 'ATIVO' %}
-                            <span class="badge bg-success">{{ emp.status_geral }}</span>
+                            {% if emp.esta_atrasado %}
+                                <span class="badge bg-danger">ATRASADO</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ emp.status_geral }}</span>
+                            {% endif %}
                         {% elif emp.status_geral == 'CANCELADO' %}
                             <span class="badge bg-danger">{{ emp.status_geral }}</span>
                         {% else %}
                             <span class="badge bg-secondary">{{ emp.status_geral }}</span>
                         {% endif %}
                     </td>
+
+                    <!-- Nova Coluna de Itens -->
+                    <td>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for item in emp.itens.all %}
+                                <li class="mb-1">
+                                    {% if item.status_item == 'DEVOLVIDO' %}
+                                        <!-- Riscado se já foi devolvido -->
+                                        <del class="text-muted">{{ item.objeto.nome_objeto }}</del>
+                                        <span class="badge bg-light text-success border border-success ms-1" style="font-size: 0.7em;">DEVOLVIDO</span>
+                                    {% else %}
+                                        <!-- Normal se ainda está com o aluno -->
+                                        <strong>{{ item.objeto.nome_objeto }}</strong>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+
                     <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
 
-                    <td class="text-center">
+                    <!-- Coluna Retirada -->
+                    <td class="text-center align-middle">
                         {% if emp.codigo_retirada and emp.status_geral != 'CANCELADO' %}
-                            <div class="qrcode mx-auto mb-2" data-text="{{ emp.codigo_retirada }}" style="width: 100px; height: 100px;"></div>
-                            <strong class="text-uppercase font-monospace">{{ emp.codigo_retirada }}</strong>
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <div class="qrcode mb-2" data-text="{{ emp.codigo_retirada }}"></div>
+                                <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
+                                    {{ emp.codigo_retirada }}
+                                </strong>
+                            </div>
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}
                     </td>
 
-                    <td class="text-center">
+                    <!-- Coluna Devolução -->
+                    <td class="text-center align-middle">
                         {% if emp.codigo_devolucao and emp.status_geral != 'CANCELADO' %}
-                            <div class="qrcode mx-auto mb-2" data-text="{{ emp.codigo_devolucao }}" style="width: 100px; height: 100px;"></div>
-                            <strong class="text-uppercase font-monospace">{{ emp.codigo_devolucao }}</strong>
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <div class="qrcode mb-2" data-text="{{ emp.codigo_devolucao }}"></div>
+                                <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
+                                    {{ emp.codigo_devolucao }}
+                                </strong>
+                            </div>
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}
@@ -66,7 +100,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="6" class="text-center py-4 text-muted">
                         Você ainda não possui nenhuma solicitação de empréstimo.<br>
                         <a href="{% url 'catalogo' %}" class="btn btn-sm btn-primary mt-2">Acessar Catálogo</a>
                     </td>
