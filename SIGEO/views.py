@@ -12,6 +12,32 @@ import string
 from django.contrib.auth import update_session_auth_hash
 
 
+def limpar_emprestimos_expirados():
+    """
+    Função invisível que varre o banco e expira os pedidos não retirados.
+    Ela procura tudo que está 'PENDENTE' mas que a data de expiração já ficou no passado.
+    """
+    # Filtra os pedidos não retirados que venceram
+    pedidos_vencidos = Emprestimo.objects.filter(
+        status_geral='PENDENTE',
+        data_expiracao__lt=timezone.now()
+    )
+
+    for emp in pedidos_vencidos:
+        # Muda o status do pedido para EXPIRADO
+        emp.status_geral = 'EXPIRADO'
+        emp.save()
+
+        # Devolve os objetos para a prateleira (catálogo)
+        for item in emp.itens.all():
+            # Aqui podemos usar o mesmo status de cancelado para o item
+            item.status_item = 'CANCELADO'
+            item.save()
+
+            if item.objeto:
+                item.objeto.status = 'DISPONIVEL'
+                item.objeto.save()
+
 def registrar(request):
     if request.method == "POST":
         form = UsuarioForm(request.POST)
@@ -54,6 +80,7 @@ def logout_view(request):
 # Este decorador atende ao seu RNF02 (Controle de Acesso no backend)
 @login_required(login_url='/login/')
 def painel(request):
+    limpar_emprestimos_expirados()
     # Filtra apenas os empréstimos do usuário logado e ordena do mais recente para o mais antigo
     meus_emprestimos = Emprestimo.objects.filter(usuario=request.user).order_by('-id')
 
@@ -70,8 +97,8 @@ def painel(request):
 
 
 @login_required(login_url='/login/')
-@login_required(login_url='/login/')
 def catalogo_objetos(request):
+    limpar_emprestimos_expirados()
     # Começa pegando todos os disponíveis
     objetos_disponiveis = Objeto.objects.filter(status='DISPONIVEL')
     categorias = Categoria.objects.all()
@@ -177,6 +204,7 @@ def validar_codigo(request):
 
 @login_required(login_url='/login/')
 def gerenciar_emprestimos(request):
+    limpar_emprestimos_expirados()
     # Bloqueia se não for funcionário
     if not request.user.is_staff:
         return redirect('painel')
@@ -338,7 +366,7 @@ def revisar_pedido(request):
 
         # 1. Cria o "Guarda-chuva" (O Empréstimo principal)
         # Exemplo: o aluno tem 24h para ir retirar no balcão
-        data_expiracao = timezone.now() + timedelta(hours=24)
+        data_expiracao = timezone.now() + timedelta(hours=3)
         codigo_ret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         codigo_dev = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
