@@ -53,7 +53,7 @@
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <span class="nav-link text-light">Olá, {{ user.email }}</span>
+                            <a class="nav-link text-light fw-bold text-decoration-underline" href="{% url 'meu_perfil' %}">Olá, {{ user.nome_completo }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-danger" href="{% url 'logout' %}">Sair</a>

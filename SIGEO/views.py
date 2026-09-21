@@ -9,6 +9,7 @@ from datetime import timedelta
 from django.db.models import Q
 import random
 import string
+from django.contrib.auth import update_session_auth_hash
 
 
 def registrar(request):
@@ -412,3 +413,43 @@ def renovar_emprestimo(request, emprestimo_id):
             emprestimo.save()
 
     return redirect('painel')
+
+
+@login_required(login_url='/login/')
+def meu_perfil(request):
+    mensagem = None
+    cor_mensagem = None
+
+    if request.method == 'POST':
+        telefone = request.POST.get('telefone')
+        senha = request.POST.get('senha')
+        confirmar_senha = request.POST.get('confirmar_senha')
+
+        usuario = request.user
+
+        # 1. Atualiza o telefone
+        usuario.telefone = telefone
+
+        # 2. Verifica se o aluno preencheu algo na senha
+        if senha or confirmar_senha:
+            if senha == confirmar_senha:
+                usuario.set_password(senha)
+                usuario.save()
+                # Mantém o aluno logado após mudar a senha
+                update_session_auth_hash(request, usuario)
+
+                mensagem = "Perfil e senha atualizados com sucesso!"
+                cor_mensagem = "success"
+            else:
+                mensagem = "As senhas não coincidem. Tente novamente."
+                cor_mensagem = "danger"
+        else:
+            # Se não mexeu na senha, só salva o telefone
+            usuario.save()
+            mensagem = "Telefone atualizado com sucesso!"
+            cor_mensagem = "success"
+
+    return render(request, 'meu_perfil.html', {
+        'mensagem': mensagem,
+        'cor_mensagem': cor_mensagem
+    })

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Meu Perfil</h4>
+            </div>
+            <div class="card-body">
+                
+                {% if mensagem %}
+                <div class="alert alert-{{ cor_mensagem }} alert-dismissible fade show" role="alert">
+                    {{ mensagem }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- Dados Fixos (Somente Leitura) -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Nome Completo</label>
+                        <input type="text" class="form-control bg-light" value="{{ user.nome_completo }}" disabled>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">E-mail</label>
+                            <input type="email" class="form-control bg-light" value="{{ user.email }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-muted">RA / SIAPE</label>
+                            <input type="text" class="form-control bg-light" value="{{ user.matricula }}" disabled>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="mb-3 text-primary">Dados Editáveis</h5>
+
+                    <!-- Dados Editáveis -->
+                    <div class="mb-3">
+                        <label for="telefone" class="form-label fw-bold">Telefone de Contato</label>
+                        <input type="text" name="telefone" id="telefone" class="form-control border-primary" value="{{ user.telefone }}" required>
+                    </div>
+
+                    <div class="alert alert-warning small py-2">
+                        Deixe os campos de senha <strong>em branco</strong> se não quiser alterá-la.
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="senha" class="form-label fw-bold">Nova Senha</label>
+                            <input type="password" name="senha" id="senha" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirmar_senha" class="form-label fw-bold">Confirmar Nova Senha</label>
+                            <input type="password" name="confirmar_senha" id="confirmar_senha" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">Salvar Alterações</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
