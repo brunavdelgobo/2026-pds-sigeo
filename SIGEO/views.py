@@ -39,17 +39,27 @@ def limpar_emprestimos_expirados():
                 item.objeto.save()
 
 def registrar(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            # O save() agora usa a lógica do nosso UsuarioManager e criptografa a senha sozinho
-            usuario = form.save(commit=False)
-            usuario.set_password(form.cleaned_data["senha"])
-            usuario.save()
-            return redirect("login")
+            # Pausa o salvamento para aplicar as regras de segurança
+            novo_usuario = form.save(commit=False)
+
+            # Força o perfil padrão e blinda contra elevação de privilégio
+            novo_usuario.perfil = 'SOLICITANTE'
+            novo_usuario.is_staff = False
+
+            # Criptografa a senha corretamente para o login funcionar
+            novo_usuario.set_password(form.cleaned_data['senha'])
+
+            # Grava no banco de dados
+            novo_usuario.save()
+
+            return redirect('login')
     else:
         form = UsuarioForm()
-    return render(request, "registrar.html", {"form": form})
+
+    return render(request, 'registrar.html', {'form': form})
 
 
 def login_view(request):
