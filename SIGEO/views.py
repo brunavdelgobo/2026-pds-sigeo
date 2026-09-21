@@ -13,6 +13,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+import csv
 
 
 def limpar_emprestimos_expirados():
@@ -527,5 +528,36 @@ def relatorio_inventario_pdf(request):
 
     if pisa_status.err:
         return HttpResponse('Tivemos um problema ao gerar o PDF.', status=500)
+
+    return response
+
+
+@login_required(login_url='/login/')
+def relatorio_inventario_csv(request):
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    # Configura a resposta para baixar um arquivo CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.csv"'
+
+    response.write('\ufeff')
+
+    # Cria o "escritor" do arquivo
+    writer = csv.writer(response, delimiter=';')
+
+    # Escreve a primeira linha (Cabeçalhos das colunas)
+    writer.writerow(['Patrimônio', 'Objeto', 'Categoria', 'Condição', 'Status Atual'])
+
+    # Busca os objetos e escreve uma linha para cada um
+    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+    for obj in objetos:
+        writer.writerow([
+            obj.cg_patrimonio if obj.cg_patrimonio else 'S/N',
+            obj.nome_objeto,
+            obj.categoria.nome_categoria,
+            obj.get_condicao_display(),
+            obj.get_status_display()
+        ])
 
     return response

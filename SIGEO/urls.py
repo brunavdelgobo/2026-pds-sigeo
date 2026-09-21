@@ -39,4 +39,5 @@ urlpatterns = [
     path('renovar/<int:emprestimo_id>/', views.renovar_emprestimo, name='renovar_emprestimo'),
     path('perfil/', views.meu_perfil, name='meu_perfil'),
     path('relatorio/inventario/', views.relatorio_inventario_pdf, name='relatorio_inventario_pdf'),
+    path('relatorio/inventario/csv/', views.relatorio_inventario_csv, name='relatorio_inventario_csv'),
 ]
