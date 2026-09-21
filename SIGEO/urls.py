@@ -33,4 +33,7 @@ urlpatterns = [
     path('avaliar-devolucao/<int:emprestimo_id>/', views.avaliar_devolucao, name='avaliar_devolucao'),
     path('manutencao/', views.gerenciar_manutencao, name='gerenciar_manutencao'),
     path('manutencao/concluir/<int:objeto_id>/', views.concluir_manutencao, name='concluir_manutencao'),
+    path('adicionar-pedido/<int:objeto_id>/', views.adicionar_ao_pedido, name='adicionar_ao_pedido'),
+    path('revisar-pedido/', views.revisar_pedido, name='revisar_pedido'),
+    path('remover-pedido/<int:objeto_id>/', views.remover_do_pedido, name='remover_do_pedido'),
 ]

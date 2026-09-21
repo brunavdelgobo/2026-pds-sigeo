@@ -8,37 +8,49 @@
                 <h4 class="mb-0">Avaliação de Devolução</h4>
             </div>
             <div class="card-body">
-                <h5 class="card-title">Objeto: {{ objeto.nome_objeto }}</h5>
-                <h6 class="card-subtitle mb-3 text-muted">Patrimônio: {{ objeto.cg_patrimonio|default:"Não informado" }}</h6>
-                
                 <p>Aluno responsável: <strong>{{ emprestimo.usuario.nome_completo }}</strong></p>
+                <div class="alert alert-info py-2">
+                    Avalie a condição de cada item. Se o aluno esqueceu de trazer algum objeto, marque como <strong>"Ainda não devolvido"</strong>.
+                </div>
                 <hr>
 
                 <form method="POST">
                     {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="condicao" class="form-label fw-bold">Como o objeto está sendo devolvido?</label>
-                        <select name="condicao" id="condicao" class="form-select form-select-lg" required>
-                            <option value="">-- Selecione o estado atual --</option>
-                            {% for sigla, descricao in condicoes %}
-                                <!-- Marca a condição antiga do objeto como selecionada por padrão -->
-                                <option value="{{ sigla }}" {% if objeto.condicao == sigla %}selected{% endif %}>
-                                    {{ descricao }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                        <div class="form-text">Se marcado como "Com Avaria", o objeto será enviado automaticamente para Manutenção e não aparecerá no catálogo.</div>
-                    </div>
 
-                    <div class="mb-4">
-                        <label for="observacao" class="form-label fw-bold">Observações Adicionais (opcional)</label>
-                        <textarea name="observacao" id="observacao" rows="3" class="form-control" placeholder="Descreva se está faltando alguma peça, se há riscos, etc."></textarea>
+                    {% for item in itens %}
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <h5 class="text-primary mb-1">{{ item.objeto.nome_objeto }}</h5>
+                        <h6 class="text-muted small mb-3">Patrimônio: {{ item.objeto.cg_patrimonio|default:"Não informado" }}</h6>
+
+                        <div class="mb-2">
+                            <label for="condicao_{{ item.id }}" class="form-label fw-bold">Condição de retorno:</label>
+                            <select name="condicao_{{ item.id }}" id="condicao_{{ item.id }}" class="form-select border-primary" required>
+                                <option value="">-- Selecione o que aconteceu com este item --</option>
+
+                                <!-- OPÇÃO DE DEVOLUÇÃO PARCIAL -->
+                                <option value="NAO_DEVOLVIDO" class="text-danger fw-bold">⚠️ Não devolvido (Ficou com o aluno)</option>
+
+                                {% for sigla, descricao in condicoes %}
+                                    <option value="{{ sigla }}" {% if item.objeto.condicao == sigla %}selected{% endif %}>
+                                        {{ descricao }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- CAMPO DE OBSERVAÇÃO DE VOLTA -->
+                        <div>
+                            <label for="obs_{{ item.id }}" class="form-label text-muted small mb-1">Observações / Descrição da Avaria (Opcional):</label>
+                            <textarea name="obs_{{ item.id }}" id="obs_{{ item.id }}" rows="2" class="form-control form-control-sm" placeholder="Digite detalhes sobre peças faltando, arranhões, etc..."></textarea>
+                        </div>
                     </div>
+                    {% endfor %}
+
+                    <div class="form-text mb-4 text-center">O pedido só será "Concluído" quando todos os itens forem retornados.</div>
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="{% url 'validar_codigo' %}" class="btn btn-secondary">Cancelar e Voltar</a>
-                        <button type="submit" class="btn btn-success">Concluir Devolução</button>
+                        <a href="{% url 'validar_codigo' %}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success">Confirmar Devolução</button>
                     </div>
                 </form>
 

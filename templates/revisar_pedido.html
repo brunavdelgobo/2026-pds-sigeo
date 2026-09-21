@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mt-4">
+    <h2 class="text-primary">Revisar Solicitação</h2>
+    <p class="lead">Confira os itens selecionados antes de confirmar o pedido.</p>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="list-group shadow-sm mb-4">
+                {% for obj in objetos %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <h5 class="mb-1">{{ obj.nome_objeto }}</h5>
+                            <small class="text-muted">Categoria: {{ obj.categoria.nome_categoria }} | Patrimônio: {{ obj.cg_patrimonio|default:"N/A" }}</small>
+                            <br>
+                            <small class="text-info fw-bold">Prazo de empréstimo: {{ obj.categoria.prazo_dias }} dias</small>
+                        </div>
+                        <a href="{% url 'remover_do_pedido' obj.id %}" class="btn btn-sm btn-outline-danger">Remover</a>
+                    </div>
+                {% empty %}
+                    <div class="list-group-item text-center py-5">
+                        <p class="text-muted mb-0">Você ainda não selecionou nenhum objeto.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Resumo</h5>
+                    <p class="card-text">Total de itens: <strong>{{ objetos|length }}</strong></p>
+                    <div class="alert alert-warning small">
+                        Você terá <strong>24 horas</strong> para retirar os objetos no balcão após a confirmação.
+                    </div>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        {% if objetos %}
+                            <button type="submit" class="btn btn-success w-100 btn-lg">Confirmar Solicitação</button>
+                        {% else %}
+                            <a href="{% url 'catalogo' %}" class="btn btn-primary w-100">Voltar ao Catálogo</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

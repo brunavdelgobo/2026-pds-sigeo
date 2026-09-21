@@ -7,6 +7,8 @@ import uuid
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q
+import random
+import string
 
 
 def registrar(request):
@@ -223,46 +225,58 @@ def avaliar_devolucao(request, emprestimo_id):
     if not request.user.is_staff:
         return redirect('painel')
 
-    # Busca o empréstimo e o objeto vinculado
     emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, status_geral='ATIVO')
-    item = ItemEmprestimo.objects.filter(emprestimo=emprestimo).first()
-    objeto = item.objeto if item else None
+
+    # Filtra APENAS os itens que ainda NÃO foram devolvidos
+    itens_pendentes = ItemEmprestimo.objects.filter(emprestimo=emprestimo).exclude(status_item='DEVOLVIDO')
 
     if request.method == 'POST':
-        nova_condicao = request.POST.get('condicao')
-        observacao = request.POST.get('observacao')  # Caso você queira salvar isso no model futuramente
+        itens_devolvidos_agora = 0
 
-        # Atualiza a condição do objeto
-        objeto.condicao = nova_condicao
+        for item in itens_pendentes:
+            nova_condicao = request.POST.get(f'condicao_{item.id}')
+            # A observacao está sendo capturada aqui (podemos salvar no banco no futuro se quiser)
+            observacao = request.POST.get(f'obs_{item.id}')
 
-        # Agora o código usa exatamente a sigla que está no seu models.py
-        if nova_condicao == 'AVARIADO':
-            objeto.status = 'MANUTENCAO'
+            # Se o funcionário marcou uma condição e NÃO escolheu "Ainda com o aluno"
+            if nova_condicao and nova_condicao != 'NAO_DEVOLVIDO':
+                objeto = item.objeto
+                objeto.condicao = nova_condicao
+
+                if nova_condicao == 'AVARIADO':
+                    objeto.status = 'MANUTENCAO'
+                else:
+                    objeto.status = 'DISPONIVEL'
+                objeto.save()
+
+                item.status_item = 'DEVOLVIDO'
+                item.condicao_retorno = nova_condicao
+                item.save()
+
+                itens_devolvidos_agora += 1
+
+        # Verifica se ainda sobrou algum item com o aluno após essa devolução
+        ainda_pendentes = ItemEmprestimo.objects.filter(emprestimo=emprestimo).exclude(status_item='DEVOLVIDO').count()
+
+        if ainda_pendentes == 0:
+            # Tudo devolvido! Conclui o pedido
+            emprestimo.status_geral = 'CONCLUIDO'
+            emprestimo.save()
+            mensagem = "Devolução finalizada! Todos os itens deste pedido foram retornados."
         else:
-            objeto.status = 'DISPONIVEL'
+            # Faltam itens, mantém o empréstimo ATIVO
+            mensagem = f"Devolução PARCIAL registrada! {itens_devolvidos_agora} item(ns) retornado(s). O aluno ainda precisa devolver {ainda_pendentes} item(ns)."
 
-        objeto.save()
-
-        # Conclui o empréstimo
-        emprestimo.status_geral = 'CONCLUIDO'
-        emprestimo.save()
-
-        if item:
-            item.status_item = 'DEVOLVIDO'
-            item.save()
-
-        # Retorna para a tela de bipar código com mensagem de sucesso
         return render(request, 'validar_codigo.html', {
-            'mensagem': f"Devolução concluída! {objeto.nome_objeto} agora está como: {objeto.get_status_display()}.",
+            'mensagem': mensagem,
             'cor_mensagem': 'success'
         })
 
-    # Pega dinamicamente as opções de condição que você criou lá no models.py
     opcoes_condicao = Objeto._meta.get_field('condicao').choices
 
     return render(request, 'avaliar_devolucao.html', {
         'emprestimo': emprestimo,
-        'objeto': objeto,
+        'itens': itens_pendentes,
         'condicoes': opcoes_condicao
     })
 
@@ -291,3 +305,82 @@ def concluir_manutencao(request, objeto_id):
     objeto.save()
 
     return redirect('gerenciar_manutencao')
+
+
+@login_required(login_url='/login/')
+def adicionar_ao_pedido(request, objeto_id):
+    # Se o carrinho não existir na sessão do usuario, cria uma lista vazia
+    if 'carrinho' not in request.session:
+        request.session['carrinho'] = []
+
+    carrinho = request.session['carrinho']
+
+    # Só adiciona se o objeto já não estiver no carrinho
+    if objeto_id not in carrinho:
+        carrinho.append(objeto_id)
+        # Avisa o Django que a sessão foi modificada e precisa ser salva
+        request.session.modified = True
+
+        # Redireciona de volta para o catálogo para ele continuar escolhendo
+    return redirect('catalogo')
+
+
+@login_required(login_url='/login/')
+def revisar_pedido(request):
+    # Pega os IDs salvos na sessão (ou uma lista vazia se não tiver nada)
+    carrinho_ids = request.session.get('carrinho', [])
+
+    # Busca no banco os objetos reais usando os IDs
+    objetos_no_carrinho = Objeto.objects.filter(id__in=carrinho_ids)
+
+    if request.method == 'POST':
+        if not objetos_no_carrinho:
+            return redirect('catalogo')
+
+        # 1. Cria o "Guarda-chuva" (O Empréstimo principal)
+        # Exemplo: o aluno tem 24h para ir retirar no balcão
+        data_expiracao = timezone.now() + timedelta(hours=24)
+        codigo_ret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+        codigo_dev = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+        novo_emprestimo = Emprestimo.objects.create(
+            usuario=request.user,
+            data_expiracao=data_expiracao,
+            codigo_retirada=codigo_ret,
+            codigo_devolucao=codigo_dev,
+            status_geral='PENDENTE'
+        )
+
+        # 2. Cria os Itens individuais dentro deste empréstimo
+        for obj in objetos_no_carrinho:
+            # Puxa o prazo de dias diretamente da categoria do objeto
+            prazo = obj.categoria.prazo_dias
+            data_devolucao = timezone.now() + timedelta(days=prazo)
+
+            ItemEmprestimo.objects.create(
+                emprestimo=novo_emprestimo,
+                objeto=obj,
+                data_devolucao_prevista=data_devolucao,
+                status_item='AGUARDANDO_RETIRADA'
+            )
+
+            # Muda o status do objeto para que ninguém mais pegue no catálogo
+            obj.status = 'EMPRESTADO'
+            obj.save()
+
+        # 3. Limpa o carrinho e manda pro painel
+        request.session['carrinho'] = []
+        request.session.modified = True
+
+        return redirect('painel')
+
+    return render(request, 'revisar_pedido.html', {'objetos': objetos_no_carrinho})
+
+
+@login_required(login_url='/login/')
+def remover_do_pedido(request, objeto_id):
+    carrinho = request.session.get('carrinho', [])
+    if objeto_id in carrinho:
+        carrinho.remove(objeto_id)
+        request.session.modified = True
+    return redirect('revisar_pedido')
