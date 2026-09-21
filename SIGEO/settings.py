@@ -122,3 +122,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'SIGEO.Usuario'
+
+# Configuração de E-mail (Modo de Teste no Terminal)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'sigeo@ifpr.edu.br' # Remetente padrão do sistema

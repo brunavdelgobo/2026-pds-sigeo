@@ -14,6 +14,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import csv
+from django.core.mail import send_mail
 
 
 def limpar_emprestimos_expirados():
@@ -41,6 +42,26 @@ def limpar_emprestimos_expirados():
             if item.objeto:
                 item.objeto.status = 'DISPONIVEL'
                 item.objeto.save()
+
+        # 2. Identifica empréstimos ATIVOS que estão em ATRASO
+        # Buscamos todos os ativos e usamos o método esta_atrasado() que você já tem no model
+        emprestimos_ativos = Emprestimo.objects.filter(status_geral='ATIVO')
+
+        for emp in emprestimos_ativos:
+            if emp.esta_atrasado():
+                # Aqui você pode disparar o e-mail de aviso de atraso
+                data_local = timezone.localtime(emp.data_expiracao)
+                data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
+
+                assunto = f"SIGEO - AVISO DE ATRASO (Pedido #{emp.id})"
+                mensagem = (
+                    f"Olá, {emp.usuario.nome_completo}!\n\n"
+                    f"Constatamos que o seu empréstimo (Pedido #{emp.id}) está com a devolução em ATRASO.\n"
+                    f"O prazo limite era {data_formatada}.\n\n"
+                    f"Por favor, realize a devolução dos itens o mais rápido possível "
+                    f"para evitar bloqueios no seu cadastro.\n\n"
+                    f"Atenciosamente,\nEquipe SIGEO - IFPR"
+                )
 
 def registrar(request):
     if request.method == 'POST':
@@ -409,11 +430,34 @@ def revisar_pedido(request):
             obj.status = 'EMPRESTADO'
             obj.save()
 
-        # 3. Limpa o carrinho e manda pro painel
-        request.session['carrinho'] = []
-        request.session.modified = True
+            # 3. Limpa o carrinho
+            request.session['carrinho'] = []
+            request.session.modified = True
 
-        return redirect('painel')
+            # Converte a data para o fuso horário local antes de formatar para o texto
+            data_local = timezone.localtime(novo_emprestimo.data_expiracao)
+            data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
+
+            # 4. Envia o e-mail de confirmação para o aluno
+            assunto = f"SIGEO - Pedido Solicitado (Código: {novo_emprestimo.codigo_retirada})"
+            mensagem = (
+                f"Olá, {request.user.nome_completo}!\n\n"
+                f"Sua solicitação foi registrada com sucesso.\n\n"
+                f"Você tem até o dia {data_formatada} "
+                f"para ir ao balcão retirar seus itens.\n\n"
+                f"Apresente este código de retirada: {novo_emprestimo.codigo_retirada}\n\n"
+                f"Atenciosamente,\nEquipe SIGEO - IFPR"
+            )
+
+            # Parâmetros: Assunto, Mensagem, Remetente, Lista de Destinatários
+            send_mail(
+                assunto,
+                mensagem,
+                None,  # Usa o DEFAULT_FROM_EMAIL do settings
+                [request.user.email]
+            )
+
+            return redirect('painel')
 
     return render(request, 'revisar_pedido.html', {'objetos': objetos_no_carrinho})
 
