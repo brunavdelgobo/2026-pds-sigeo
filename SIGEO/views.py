@@ -382,3 +382,33 @@ def remover_do_pedido(request, objeto_id):
         carrinho.remove(objeto_id)
         request.session.modified = True
     return redirect('revisar_pedido')
+
+
+@login_required(login_url='/login/')
+def renovar_emprestimo(request, emprestimo_id):
+    emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user, status_geral='ATIVO')
+
+    # Só renova se não estiver atrasado
+    if not emprestimo.esta_atrasado():
+        nova_data_maxima = emprestimo.data_expiracao
+        itens_pendentes = emprestimo.itens.exclude(status_item='DEVOLVIDO')
+
+        # 1. Atualiza cada item com o seu prazo específico da categoria
+        for item in itens_pendentes:
+            # Puxa o prazo dinâmico da categoria daquele objeto específico
+            prazo_dias = item.objeto.categoria.prazo_dias
+
+            # Adiciona os dias específicos
+            item.data_devolucao_prevista += timedelta(days=prazo_dias)
+            item.save()
+
+            # Descobre qual é a data mais distante para atualizar o pedido principal
+            if item.data_devolucao_prevista > nova_data_maxima:
+                nova_data_maxima = item.data_devolucao_prevista
+
+        # 2. Atualiza a data geral do empréstimo para bater com o último item a ser devolvido
+        if itens_pendentes.exists():
+            emprestimo.data_expiracao = nova_data_maxima
+            emprestimo.save()
+
+    return redirect('painel')

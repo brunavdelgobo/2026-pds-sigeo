@@ -90,9 +90,20 @@
                         {% endif %}
                     </td>
 
-                    <td class="text-center">
+                    <td class="text-center align-middle">
                         {% if emp.status_geral == 'PENDENTE' %}
-                            <a href="{% url 'cancelar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Tem certeza que deseja cancelar este pedido? O objeto voltará para o catálogo.')">Cancelar</a>
+                            <!-- Botão de Cancelar para pedidos novos -->
+                            <a href="{% url 'cancelar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Tem certeza que deseja cancelar este pedido?')">Cancelar</a>
+
+                        {% elif emp.status_geral == 'ATIVO' %}
+                            <!-- Verifica se está atrasado -->
+                            {% if emp.esta_atrasado %}
+                                <span class="text-danger small fw-bold">Bloqueado<br>(Em Atraso)</span>
+                            {% else %}
+                                <!-- Botão de Renovar -->
+                                <a href="{% url 'renovar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-primary w-100" onclick="return confirm('Deseja estender o prazo de devolução?')">Renovar Prazo</a>
+                            {% endif %}
+
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}
