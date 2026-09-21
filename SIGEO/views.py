@@ -251,3 +251,29 @@ def avaliar_devolucao(request, emprestimo_id):
         'objeto': objeto,
         'condicoes': opcoes_condicao
     })
+
+
+@login_required(login_url='/login/')
+def gerenciar_manutencao(request):
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    # Busca apenas os objetos que estão com status de manutenção
+    objetos_manutencao = Objeto.objects.filter(status='MANUTENCAO').order_by('nome_objeto')
+
+    return render(request, 'manutencao.html', {'objetos': objetos_manutencao})
+
+
+@login_required(login_url='/login/')
+def concluir_manutencao(request, objeto_id):
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    objeto = get_object_or_404(Objeto, id=objeto_id, status='MANUTENCAO')
+
+    # Restaura a condição para perfeito e o status para disponível
+    objeto.condicao = 'INTEGRO'
+    objeto.status = 'DISPONIVEL'
+    objeto.save()
+
+    return redirect('gerenciar_manutencao')
