@@ -5,14 +5,51 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="text-primary">Gestão de Empréstimos</h2>
-            <p class="lead mb-0">Visão geral de todas as solicitações do sistema.</p>
+            <p class="lead mb-0">Visão geral de todas as solicitações e do acervo.</p>
         </div>
         <a href="{% url 'validar_codigo' %}" class="btn btn-success">Validar um Código</a>
     </div>
     <hr>
 
+    <!-- PAINEL DE ESTATÍSTICAS -->
+    <div class="row mb-4 text-center">
+        <div class="col-md-3 mb-2">
+            <div class="card bg-primary text-white shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Acervo Total</h5>
+                    <h2 class="display-6 fw-bold mb-0">{{ total_objetos }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-success text-white shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Disponíveis</h5>
+                    <h2 class="display-6 fw-bold mb-0">{{ disponiveis }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-warning text-dark shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Emprestados</h5>
+                    <h2 class="display-6 fw-bold mb-0">{{ emprestados }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card bg-danger text-white shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Em Manutenção</h5>
+                    <h2 class="display-6 fw-bold mb-0">{{ em_manutencao }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA DE EMPRÉSTIMOS -->
     <div class="table-responsive">
-        <table class="table table-striped table-hover mt-3 shadow-sm bg-white rounded align-middle">
+        <table class="table table-striped table-hover shadow-sm bg-white rounded align-middle">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
@@ -38,6 +75,8 @@
                             <span class="badge bg-primary">{{ emp.status_geral }}</span>
                         {% elif emp.status_geral == 'CONCLUIDO' %}
                             <span class="badge bg-success">{{ emp.status_geral }}</span>
+                        {% elif emp.status_geral == 'CANCELADO' %}
+                            <span class="badge bg-danger">{{ emp.status_geral }}</span>
                         {% else %}
                             <span class="badge bg-secondary">{{ emp.status_geral }}</span>
                         {% endif %}

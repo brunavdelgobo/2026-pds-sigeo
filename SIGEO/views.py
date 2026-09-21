@@ -171,16 +171,30 @@ def validar_codigo(request):
 
     return render(request, 'validar_codigo.html', {'mensagem': mensagem, 'cor_mensagem': cor_mensagem})
 
+
 @login_required(login_url='/login/')
 def gerenciar_emprestimos(request):
     # Bloqueia se não for funcionário
     if not request.user.is_staff:
         return redirect('painel')
 
-    # Puxa todos os empréstimos do sistema, do mais recente para o mais antigo
     todos_emprestimos = Emprestimo.objects.all().order_by('-id')
 
-    return render(request, 'gerenciar_emprestimos.html', {'emprestimos': todos_emprestimos})
+    # --- Lógica das Estatísticas ---
+    total_objetos = Objeto.objects.count()
+    disponiveis = Objeto.objects.filter(status='DISPONIVEL').count()
+    emprestados = Objeto.objects.filter(status='EMPRESTADO').count()
+    em_manutencao = Objeto.objects.filter(status='MANUTENCAO').count()
+
+    contexto = {
+        'emprestimos': todos_emprestimos,
+        'total_objetos': total_objetos,
+        'disponiveis': disponiveis,
+        'emprestados': emprestados,
+        'em_manutencao': em_manutencao,
+    }
+
+    return render(request, 'gerenciar_emprestimos.html', contexto)
 
 
 @login_required(login_url='/login/')
