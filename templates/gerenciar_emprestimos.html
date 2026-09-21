@@ -72,13 +72,17 @@
                         {% if emp.status_geral == 'PENDENTE' %}
                             <span class="badge bg-warning text-dark">{{ emp.status_geral }}</span>
                         {% elif emp.status_geral == 'ATIVO' %}
-                            <span class="badge bg-primary">{{ emp.status_geral }}</span>
+                            {% if emp.esta_atrasado %}
+                                <span class="badge bg-danger">ATRASADO</span>
+                            {% else %}
+                                <span class="badge bg-primary">ATIVO</span>
+                            {% endif %}
                         {% elif emp.status_geral == 'CONCLUIDO' %}
                             <span class="badge bg-success">{{ emp.status_geral }}</span>
                         {% elif emp.status_geral == 'CANCELADO' %}
-                            <span class="badge bg-danger">{{ emp.status_geral }}</span>
-                        {% else %}
                             <span class="badge bg-secondary">{{ emp.status_geral }}</span>
+                        {% else %}
+                            <span class="badge bg-dark">{{ emp.status_geral }}</span>
                         {% endif %}
                     </td>
                     <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>

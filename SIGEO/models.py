@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone
 
 
 class UsuarioManager(BaseUserManager):
@@ -97,6 +98,12 @@ class Emprestimo(models.Model):
 
     def __str__(self):
         return f"Empréstimo #{self.id} - {self.usuario.nome_completo}"
+
+    def esta_atrasado(self):
+        # Se o empréstimo estiver ATIVO e a data de expiração já passou da hora atual
+        if self.status_geral == 'ATIVO' and self.data_expiracao < timezone.now():
+            return True
+        return False
 
 
 class ItemEmprestimo(models.Model):
