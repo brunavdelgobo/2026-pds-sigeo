@@ -10,6 +10,9 @@ from django.db.models import Q
 import random
 import string
 from django.contrib.auth import update_session_auth_hash
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 
 def limpar_emprestimos_expirados():
@@ -491,3 +494,38 @@ def meu_perfil(request):
         'mensagem': mensagem,
         'cor_mensagem': cor_mensagem
     })
+
+
+@login_required(login_url='/login/')
+def relatorio_inventario_pdf(request):
+    if not request.user.is_staff:
+        return redirect('painel')
+
+    # Busca todos os objetos ordenados primeiro por categoria, depois por nome
+    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+
+    contexto = {
+        'objetos': objetos,
+        'total': objetos.count(),
+        'disponiveis': objetos.filter(status='DISPONIVEL').count(),
+        'emprestados': objetos.filter(status='EMPRESTADO').count(),
+        'manutencao': objetos.filter(status='MANUTENCAO').count(),
+        'data_geracao': timezone.now()
+    }
+
+    # Carrega o HTML que será usado como "molde"
+    template = get_template('relatorio_pdf.html')
+    html = template.render(contexto)
+
+    # Configura a resposta para forçar o download de um arquivo PDF
+    response = HttpResponse(content_type='application/pdf')
+    # Use 'attachment' para baixar direto, ou 'inline' para abrir no navegador antes
+    response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.pdf"'
+
+    # Converte o HTML em PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('Tivemos um problema ao gerar o PDF.', status=500)
+
+    return response

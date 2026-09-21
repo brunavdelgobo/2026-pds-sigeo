@@ -6,9 +6,10 @@
         <div>
             <h2 class="text-primary">Gestão de Empréstimos</h2>
             <p class="lead mb-0">Visão geral de todas as solicitações e do acervo.</p>
+        <div>
+            <a href="{% url 'validar_codigo' %}" class="btn btn-success">Validar um Código</a>
+            <a href="{% url 'relatorio_inventario_pdf' %}" class="btn btn-outline-danger ms-2" target="_blank">📄 Baixar PDF</a>
         </div>
-        <a href="{% url 'validar_codigo' %}" class="btn btn-success">Validar um Código</a>
-    </div>
     <hr>
 
     <!-- PAINEL DE ESTATÍSTICAS -->
