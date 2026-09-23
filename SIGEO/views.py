@@ -134,15 +134,23 @@ def painel(request):
 @login_required(login_url='/login/')
 def catalogo_objetos(request):
     limpar_emprestimos_expirados()
-    # Começa pegando todos os disponíveis
+
+    # --- LÓGICA DE BLOQUEIO (RF24) ---
+    usuario_bloqueado = False
+    # Puxa os empréstimos ativos do usuário logado
+    emprestimos_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO')
+    for emp in emprestimos_ativos:
+        if emp.esta_atrasado():
+            usuario_bloqueado = True
+            break  # Achou um atrasado, já pode parar de procurar e aplicar o bloqueio
+    # --------------------------------
+
     objetos_disponiveis = Objeto.objects.filter(status='DISPONIVEL')
     categorias = Categoria.objects.all()
 
-    # Pega o que o usuário digitou na barra de busca e o filtro de categoria
     query = request.GET.get('q')
     categoria_id = request.GET.get('categoria')
 
-    # Filtra por texto (busca no nome, descrição ou patrimônio)
     if query:
         objetos_disponiveis = objetos_disponiveis.filter(
             Q(nome_objeto__icontains=query) |
@@ -150,7 +158,6 @@ def catalogo_objetos(request):
             Q(cg_patrimonio__icontains=query)
         )
 
-    # Filtra pela categoria selecionada
     if categoria_id:
         objetos_disponiveis = objetos_disponiveis.filter(categoria_id=categoria_id)
 
@@ -158,8 +165,8 @@ def catalogo_objetos(request):
         'objetos': objetos_disponiveis,
         'categorias': categorias,
         'busca_atual': query,
-        # Converte para string para o HTML conseguir marcar como 'selecionado'
-        'categoria_atual': str(categoria_id) if categoria_id else ''
+        'categoria_atual': str(categoria_id) if categoria_id else '',
+        'usuario_bloqueado': usuario_bloqueado  # Mandamos a informação para a tela!
     }
     return render(request, 'catalogo.html', contexto)
 

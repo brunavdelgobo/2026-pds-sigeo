@@ -5,6 +5,14 @@
     <h1 class="text-primary">Catálogo de Acervo Disponível</h1>
     <p class="lead">Escolha um objeto abaixo para solicitar o empréstimo:</p>
 
+    <!-- NOVO: ALERTA DE BLOQUEIO NO TOPO -->
+    {% if usuario_bloqueado %}
+    <div class="alert alert-danger shadow-sm text-center" role="alert">
+        <strong>Atenção!</strong> Você possui materiais com devolução em atraso.
+        Novas solicitações estão <strong>bloqueadas</strong> até a regularização.
+    </div>
+    {% endif %}
+
     <!-- Formulário de Busca e Filtro -->
     <form method="GET" class="row g-3 mb-4 bg-white p-3 shadow-sm rounded">
         <div class="col-md-6">
@@ -41,7 +49,12 @@
                         </p>
                     </div>
                     <div class="card-footer bg-transparent border-top-0">
-                        <a href="{% url 'adicionar_ao_pedido' obj.id %}" class="btn btn-outline-primary w-100">Adicionar ao Pedido</a>
+                        <!-- NOVO: TRAVA NO BOTÃO DE ADICIONAR -->
+                        {% if not usuario_bloqueado %}
+                            <a href="{% url 'adicionar_ao_pedido' obj.id %}" class="btn btn-outline-primary w-100">Adicionar ao Pedido</a>
+                        {% else %}
+                            <button class="btn btn-secondary w-100" disabled>Bloqueado (Em atraso)</button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
