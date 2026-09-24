@@ -1,30 +1,72 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Validação de Retirada / Devolução</h4>
-            </div>
-            <div class="card-body text-center p-5">
-                <p class="lead">Digite ou bip o código apresentado pelo aluno:</p>
-                
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="input-group input-group-lg mb-3">
-                        <input type="text" name="codigo" class="form-control font-monospace text-center text-uppercase" placeholder="EX: A1B2C3D4" required autofocus autocomplete="off">
-                        <button class="btn btn-primary" type="submit">Processar</button>
-                    </div>
-                </form>
+<div class="container mt-4">
 
-                {% if mensagem %}
-                    <div class="alert alert-{{ cor_mensagem }} mt-4" role="alert">
-                        <strong>{{ mensagem }}</strong>
-                    </div>
-                {% endif %}
+    <!-- NOVO: EXIBIR MENSAGENS DE SUCESSO/ERRO -->
+    {% if mensagem %}
+        <div class="alert alert-{{ cor_mensagem }} alert-dismissible fade show text-center" role="alert">
+            <strong>{{ mensagem }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endif %}
+
+    <h2 class="text-primary text-center">Validar Retirada ou Devolução</h2>
+    <p class="text-center text-muted">Aponte a câmera para o QR Code do aluno ou digite o código manualmente.</p>
+
+    <div class="row justify-content-center mt-4">
+        <div class="col-md-6 col-12">
+
+            <!-- LEITOR DE CÂMERA -->
+            <div class="card shadow-sm mb-4 border-primary">
+                <div class="card-header bg-primary text-white text-center">
+                    📸 Leitor de QR Code
+                </div>
+                <div class="card-body text-center p-2">
+                    <div id="reader" style="width: 100%;"></div>
+                </div>
             </div>
+
+            <!-- FORMULÁRIO MANUAL -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <form method="POST" id="form-codigo">
+                        {% csrf_token %}
+                        <label for="codigo_input" class="form-label fw-bold">Ou digite o código alfanumérico:</label>
+                        <input type="text" name="codigo" id="codigo_input" class="form-control form-control-lg text-center mb-3" placeholder="Ex: 35WJGG" required>
+                        <button type="submit" class="btn btn-success w-100 btn-lg">Validar Código</button>
+                    </form>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    function onScanSuccess(decodedText, decodedResult) {
+        // 1. Pára a câmera imediatamente
+        html5QrcodeScanner.clear();
+
+        // 2. Preenche o input
+        document.getElementById('codigo_input').value = decodedText;
+
+        // 3. NOVO: Mostra um aviso na tela e pausa tudo! (Dá tempo de você tirar o celular da frente da tela)
+        alert("✅ QR Code identificado com sucesso!\n\nClique em OK para confirmar a validação.");
+
+        // 4. Só envia para o Django depois que você clicar em OK
+        document.getElementById('form-codigo').submit();
+    }
+
+    function onScanFailure(error) {
+        // Ignora falhas contínuas
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader",
+        { fps: 10, qrbox: {width: 250, height: 250} },
+        false);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+</script>
 {% endblock %}

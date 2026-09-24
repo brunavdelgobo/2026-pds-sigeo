@@ -16,10 +16,10 @@
             <thead class="table-dark">
                 <tr>
                     <th>Status</th>
-                    <th>Itens Solicitados</th> <!-- Nova Coluna -->
+                    <th>Itens Solicitados</th>
                     <th>Data de Expiração</th>
-                    <th class="text-center">Cód. Retirada</th>
-                    <th class="text-center">Cód. Devolução</th>
+                    <!-- Juntamos as duas colunas em uma só! -->
+                    <th class="text-center">Código (QR)</th>
                     <th class="text-center">Ações</th>
                 </tr>
             </thead>
@@ -42,17 +42,14 @@
                         {% endif %}
                     </td>
 
-                    <!-- Nova Coluna de Itens -->
                     <td>
                         <ul class="list-unstyled mb-0 small">
                             {% for item in emp.itens.all %}
                                 <li class="mb-1">
                                     {% if item.status_item == 'DEVOLVIDO' %}
-                                        <!-- Riscado se já foi devolvido -->
                                         <del class="text-muted">{{ item.objeto.nome_objeto }}</del>
                                         <span class="badge bg-light text-success border border-success ms-1" style="font-size: 0.7em;">DEVOLVIDO</span>
                                     {% else %}
-                                        <!-- Normal se ainda está com o aluno -->
                                         <strong>{{ item.objeto.nome_objeto }}</strong>
                                     {% endif %}
                                 </li>
@@ -62,23 +59,20 @@
 
                     <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
 
-                    <!-- Coluna Retirada -->
+                    <!-- A MÁGICA ACONTECE AQUI -->
                     <td class="text-center align-middle">
-                        {% if emp.codigo_retirada and emp.status_geral != 'CANCELADO' %}
+                        {% if emp.status_geral == 'PENDENTE' %}
+                            <!-- Mostra SÓ o código de Retirada -->
+                            <span class="badge bg-warning text-dark mb-1">Para Retirar</span>
                             <div class="d-flex flex-column align-items-center justify-content-center">
                                 <div class="qrcode mb-2" data-text="{{ emp.codigo_retirada }}"></div>
                                 <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
                                     {{ emp.codigo_retirada }}
                                 </strong>
                             </div>
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
-
-                    <!-- Coluna Devolução -->
-                    <td class="text-center align-middle">
-                        {% if emp.codigo_devolucao and emp.status_geral != 'CANCELADO' %}
+                        {% elif emp.status_geral == 'ATIVO' %}
+                            <!-- Mostra SÓ o código de Devolução -->
+                            <span class="badge bg-info text-dark mb-1">Para Devolver</span>
                             <div class="d-flex flex-column align-items-center justify-content-center">
                                 <div class="qrcode mb-2" data-text="{{ emp.codigo_devolucao }}"></div>
                                 <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
@@ -92,18 +86,13 @@
 
                     <td class="text-center align-middle">
                         {% if emp.status_geral == 'PENDENTE' %}
-                            <!-- Botão de Cancelar para pedidos novos -->
                             <a href="{% url 'cancelar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Tem certeza que deseja cancelar este pedido?')">Cancelar</a>
-
                         {% elif emp.status_geral == 'ATIVO' %}
-                            <!-- Verifica se está atrasado -->
                             {% if emp.esta_atrasado %}
                                 <span class="text-danger small fw-bold">Bloqueado<br>(Em Atraso)</span>
                             {% else %}
-                                <!-- Botão de Renovar -->
                                 <a href="{% url 'renovar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-primary w-100" onclick="return confirm('Deseja estender o prazo de devolução?')">Renovar Prazo</a>
                             {% endif %}
-
                         {% else %}
                             <span class="text-muted">-</span>
                         {% endif %}
@@ -111,7 +100,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
+                    <td colspan="5" class="text-center py-4 text-muted">
                         Você ainda não possui nenhuma solicitação de empréstimo.<br>
                         <a href="{% url 'catalogo' %}" class="btn btn-sm btn-primary mt-2">Acessar Catálogo</a>
                     </td>
@@ -122,18 +111,14 @@
     </div>
 </div>
 
-<!-- Biblioteca qrcode.js para gerar os códigos no front-end -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
 <script>
-    // Assim que a página carrega, o script procura todas as divs com a classe 'qrcode'
     document.addEventListener("DOMContentLoaded", function() {
         var qrElements = document.querySelectorAll('.qrcode');
 
         qrElements.forEach(function(el) {
             var texto = el.getAttribute('data-text');
             if (texto) {
-                // Desenha o QR Code dentro da div
                 new QRCode(el, {
                     text: texto,
                     width: 100,
