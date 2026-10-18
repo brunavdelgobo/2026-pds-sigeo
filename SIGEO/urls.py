@@ -9,6 +9,7 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -34,6 +35,10 @@ urlpatterns = [
     path('relatorio/inventario/csv/', views.relatorio_inventario_csv, name='relatorio_inventario_csv'),
     path('aumentar-pedido/<int:subcategoria_id>/', views.aumentar_qtd_pedido, name='aumentar_qtd_pedido'),
     path('diminuir-pedido/<int:subcategoria_id>/', views.diminuir_qtd_pedido, name='diminuir_qtd_pedido'),
+    path('recuperar-senha/', auth_views.PasswordResetView.as_view(template_name='senha_reset.html'), name='password_reset'),
+    path('recuperar-senha/enviado/', auth_views.PasswordResetDoneView.as_view(template_name='senha_reset_done.html'), name='password_reset_done'),
+    path('recuperar-senha/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='senha_reset_confirm.html'), name='password_reset_confirm'),
+    path('recuperar-senha/concluido/', auth_views.PasswordResetCompleteView.as_view(template_name='senha_reset_complete.html'), name='password_reset_complete'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

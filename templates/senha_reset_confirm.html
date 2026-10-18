@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5 card shadow-sm p-4">
+        <h3 class="text-center">Criar Nova Senha</h3>
+        {% if validlink %}
+            <form method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success w-100">Confirmar Nova Senha</button>
+            </form>
+        {% else %}
+            <div class="alert alert-danger text-center">Este link de recuperação é inválido ou já expirou.</div>
+            <a href="{% url 'password_reset' %}" class="btn btn-primary w-100">Solicitar novo link</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

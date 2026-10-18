@@ -21,9 +21,9 @@
             {% if erro %}
             <div class="alert alert-danger mt-3">{{ erro }}</div>
             {% endif %}
-
             <p class="mt-3 text-center">
-                <a href="/registrar/">Criar uma conta</a>
+                <a href="{% url 'password_reset' %}" class="text-decoration-none">Esqueci minha senha</a><br>
+                <a href="{% url 'registrar' %}" class="text-decoration-none fw-bold mt-2 d-inline-block">Criar uma conta</a>
             </p>
         </div>
     </div>

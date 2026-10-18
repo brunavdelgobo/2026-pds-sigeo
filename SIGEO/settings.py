@@ -129,9 +129,14 @@ STATIC_URL = 'static/'
 
 AUTH_USER_MODEL = 'SIGEO.Usuario'
 
-# Configuração de E-mail (Modo de Teste no Terminal)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'sigeo@ifpr.edu.br' # Remetente padrão do sistema
+# Configuração de E-mail (Modo de Produção - SMTP Gmail)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'sigeo.crpg@gmail.com' # Coloque o Gmail que vai enviar as mensagens
+EMAIL_HOST_PASSWORD = 'fpsi eehb fdla nxfc' # ATENÇÃO: Não é a sua senha normal!
+DEFAULT_FROM_EMAIL = 'SIGEO IFPR <sigeo.crpg@gmail.com>'
 
 import os
 MEDIA_URL = '/media/'
