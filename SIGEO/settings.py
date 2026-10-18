@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import dj_database_url
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,7 +83,7 @@ WSGI_APPLICATION = 'SIGEO.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.parse(
-        'postgresql://neondb_owner:npg_zstiglJ0TwK4@ep-square-bird-b62vjeqd-pooler.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        os.environ.get('DATABASE_URL', ''),
         conn_max_age=600,
         ssl_require=True
     )
@@ -136,6 +137,5 @@ EMAIL_HOST_USER = 'sigeo.crpg@gmail.com' # Coloque o Gmail que vai enviar as men
 EMAIL_HOST_PASSWORD = 'fpsi eehb fdla nxfc' # ATENÇÃO: Não é a sua senha normal!
 DEFAULT_FROM_EMAIL = 'SIGEO IFPR <sigeo.crpg@gmail.com>'
 
-import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
