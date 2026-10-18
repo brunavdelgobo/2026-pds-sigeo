@@ -1,0 +1,92 @@
+<html>
+<head>
+<title>meu_perfil.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+meu_perfil.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row justify-content-center mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm border-0&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-header bg-dark text-white&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;h4 </span><span class="s2">class</span><span class="s3">=&quot;mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Meu Perfil</span><span class="s1">&lt;/h4&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                
+                <span class="s0">{% if mensagem %}</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-{{ cor_mensagem }} alert-dismissible fade show&quot; </span><span class="s2">role</span><span class="s3">=&quot;alert&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">{{ mensagem }}</span>
+                    <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;button&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn-close&quot; </span><span class="s2">data-bs-dismiss</span><span class="s3">=&quot;alert&quot; </span><span class="s2">aria-label</span><span class="s3">=&quot;Close&quot;</span><span class="s1">&gt;&lt;/button&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+                <span class="s0">{% endif %}</span>
+
+                <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">{% csrf_token %}</span>
+                    
+                    <span class="s4">&lt;!-- Dados Fixos (Somente Leitura) --&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mb-3&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;label </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">Nome Completo</span><span class="s1">&lt;/label&gt;</span>
+                        <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;text&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control bg-light&quot; </span><span class="s2">value</span><span class="s3">=&quot;{{ user.nome_completo }}&quot; </span><span class="s2">disabled</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                    
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row mb-3&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">E-mail</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;email&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control bg-light&quot; </span><span class="s2">value</span><span class="s3">=&quot;{{ user.email }}&quot; </span><span class="s2">disabled</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">RA / SIAPE</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;text&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control bg-light&quot; </span><span class="s2">value</span><span class="s3">=&quot;{{ user.matricula }}&quot; </span><span class="s2">disabled</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;hr </span><span class="s2">class</span><span class="s3">=&quot;my-4&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;mb-3 text-primary&quot;</span><span class="s1">&gt;</span><span class="s0">Dados Editáveis</span><span class="s1">&lt;/h5&gt;</span>
+
+                    <span class="s4">&lt;!-- Dados Editáveis --&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mb-3&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;telefone&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Telefone de Contato</span><span class="s1">&lt;/label&gt;</span>
+                        <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;text&quot; </span><span class="s2">name</span><span class="s3">=&quot;telefone&quot; </span><span class="s2">id</span><span class="s3">=&quot;telefone&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control border-primary&quot; </span><span class="s2">value</span><span class="s3">=&quot;{{ user.telefone }}&quot; </span><span class="s2">required</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-warning small py-2&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">Deixe os campos de senha </span><span class="s1">&lt;strong&gt;</span><span class="s0">em branco</span><span class="s1">&lt;/strong&gt; </span><span class="s0">se não quiser alterá-la.</span>
+                    <span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row mb-4&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;senha&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Nova Senha</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;password&quot; </span><span class="s2">name</span><span class="s3">=&quot;senha&quot; </span><span class="s2">id</span><span class="s3">=&quot;senha&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;confirmar_senha&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Confirmar Nova Senha</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;password&quot; </span><span class="s2">name</span><span class="s3">=&quot;confirmar_senha&quot; </span><span class="s2">id</span><span class="s3">=&quot;confirmar_senha&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-grid&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success btn-lg&quot;</span><span class="s1">&gt;</span><span class="s0">Salvar Alterações</span><span class="s1">&lt;/button&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;/form&gt;</span>
+
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

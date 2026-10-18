@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>revisar_pedido.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+revisar_pedido.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;text-primary&quot;</span><span class="s1">&gt;</span><span class="s0">Revisar Solicitação</span><span class="s1">&lt;/h2&gt;</span>
+    <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead&quot;</span><span class="s1">&gt;</span><span class="s0">Confira os itens selecionados antes de confirmar o pedido.</span><span class="s1">&lt;/p&gt;</span>
+    <span class="s1">&lt;hr&gt;</span>
+
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-8&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;list-group shadow-sm mb-4&quot;</span><span class="s1">&gt;</span>
+                <span class="s4">&lt;!-- AGORA O FOR RODA PELO NOSSO PACOTE (item) --&gt;</span>
+                <span class="s0">{% for item in itens_carrinho %}</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;list-group-item d-flex justify-content-between align-items-center p-3&quot;</span><span class="s1">&gt;</span>
+
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex align-items-center gap-3&quot;</span><span class="s1">&gt;</span>
+                            <span class="s4">&lt;!-- MINIATURA DA FOTO (Se já tiver configurado) --&gt;</span>
+                            <span class="s0">{% if item.subcategoria.imagem %}</span>
+                                <span class="s1">&lt;img </span><span class="s2">src</span><span class="s3">=&quot;{{ item.subcategoria.imagem.url }}&quot; </span><span class="s2">class</span><span class="s3">=&quot;rounded shadow-sm&quot; </span><span class="s2">alt</span><span class="s3">=&quot;{{ item.subcategoria.nome_subcategoria }}&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">width</span><span class="s0">: </span><span class="s5">70</span><span class="s3">px</span><span class="s0">; </span><span class="s2">height</span><span class="s0">: </span><span class="s5">70</span><span class="s3">px</span><span class="s0">; </span><span class="s2">object-fit</span><span class="s0">: </span><span class="s3">cover</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                            <span class="s0">{% else %}</span>
+                                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;bg-light rounded d-flex justify-content-center align-items-center shadow-sm border&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">width</span><span class="s0">: </span><span class="s5">70</span><span class="s3">px</span><span class="s0">; </span><span class="s2">height</span><span class="s0">: </span><span class="s5">70</span><span class="s3">px</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                                    <span class="s1">&lt;i </span><span class="s2">class</span><span class="s3">=&quot;bi bi-camera text-muted fs-4&quot;</span><span class="s1">&gt;&lt;/i&gt;</span>
+                                <span class="s1">&lt;/div&gt;</span>
+                            <span class="s0">{% endif %}</span>
+
+                            <span class="s1">&lt;div&gt;</span>
+                                <span class="s4">&lt;!-- Acessamos o subcat usando item.subcategoria --&gt;</span>
+                                <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;mb-1&quot;</span><span class="s1">&gt;</span><span class="s0">{{ item.subcategoria.nome_subcategoria }}</span><span class="s1">&lt;/h5&gt;</span>
+                                <span class="s1">&lt;small </span><span class="s2">class</span><span class="s3">=&quot;text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">Categoria: {{ item.subcategoria.categoria.nome_categoria }}</span><span class="s1">&lt;/small&gt;</span>
+                                <span class="s1">&lt;br&gt;</span>
+                                <span class="s4">&lt;!-- PRAZO DINÂMICO --&gt;</span>
+                                <span class="s1">&lt;small </span><span class="s2">class</span><span class="s3">=&quot;text-info fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Prazo de empréstimo: {{ item.subcategoria.prazo_valor }} {{ item.subcategoria.get_prazo_unidade_display }}</span><span class="s1">&lt;/small&gt;</span>
+                            <span class="s1">&lt;/div&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex align-items-center gap-3&quot;</span><span class="s1">&gt;</span>
+                            <span class="s4">&lt;!-- CONTROLES DE QUANTIDADE (+ E -) --&gt;</span>
+                            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;input-group input-group-sm&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">width</span><span class="s0">: </span><span class="s5">110</span><span class="s3">px</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'diminuir_qtd_pedido' item.subcategoria.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-secondary fw-bold px-3&quot;</span><span class="s1">&gt;</span><span class="s0">-</span><span class="s1">&lt;/a&gt;</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;input-group-text bg-white fw-bold flex-grow-1 justify-content-center&quot;</span><span class="s1">&gt;</span><span class="s0">{{ item.quantidade }}</span><span class="s1">&lt;/span&gt;</span>
+                                <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'aumentar_qtd_pedido' item.subcategoria.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-secondary fw-bold px-3&quot;</span><span class="s1">&gt;</span><span class="s0">+</span><span class="s1">&lt;/a&gt;</span>
+                            <span class="s1">&lt;/div&gt;</span>
+
+                            <span class="s4">&lt;!-- BOTÃO REMOVER --&gt;</span>
+                            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'remover_do_pedido' item.subcategoria.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-sm btn-outline-danger&quot;</span><span class="s1">&gt;</span><span class="s0">Remover Tudo</span><span class="s1">&lt;/a&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s0">{% empty %}</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;list-group-item text-center py-5&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;text-muted mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Você ainda não selecionou nenhum item.</span><span class="s1">&lt;/p&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s0">{% endfor %}</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-4&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm border-primary&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title&quot;</span><span class="s1">&gt;</span><span class="s0">Resumo</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s4">&lt;!-- AGORA MOSTRA O NÚMERO TOTAL REAL (ex: 5) --&gt;</span>
+                    <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;card-text&quot;</span><span class="s1">&gt;</span><span class="s0">Total de itens no pedido: </span><span class="s1">&lt;strong&gt;</span><span class="s0">{{ total_itens }}</span><span class="s1">&lt;/strong&gt;&lt;/p&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-warning small&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">Você terá </span><span class="s1">&lt;strong&gt;</span><span class="s0">24 horas</span><span class="s1">&lt;/strong&gt; </span><span class="s0">para retirar os itens no balcão após a confirmação.</span>
+                    <span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">{% csrf_token %}</span>
+                        <span class="s0">{% if total_itens &gt; 0 %}</span>
+                            <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success w-100 btn-lg&quot;</span><span class="s1">&gt;</span><span class="s0">Confirmar Solicitação</span><span class="s1">&lt;/button&gt;</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'catalogo' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-primary w-100&quot;</span><span class="s1">&gt;</span><span class="s0">Voltar ao Catálogo</span><span class="s1">&lt;/a&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/form&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

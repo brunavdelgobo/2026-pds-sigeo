@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>validar_codigo.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+.s6 { color: #cf8e6d;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+validar_codigo.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;container mt-4&quot;</span><span class="s1">&gt;</span>
+
+    <span class="s4">&lt;!-- NOVO: EXIBIR MENSAGENS DE SUCESSO/ERRO --&gt;</span>
+    <span class="s0">{% if mensagem %}</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-{{ cor_mensagem }} alert-dismissible fade show text-center&quot; </span><span class="s2">role</span><span class="s3">=&quot;alert&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;strong&gt;</span><span class="s0">{{ mensagem }}</span><span class="s1">&lt;/strong&gt;</span>
+            <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;button&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn-close&quot; </span><span class="s2">data-bs-dismiss</span><span class="s3">=&quot;alert&quot; </span><span class="s2">aria-label</span><span class="s3">=&quot;Close&quot;</span><span class="s1">&gt;&lt;/button&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s0">{% endif %}</span>
+
+    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;text-primary text-center&quot;</span><span class="s1">&gt;</span><span class="s0">Validar Retirada ou Devolução</span><span class="s1">&lt;/h2&gt;</span>
+    <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;text-center text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">Aponte a câmera para o QR Code do aluno ou digite o código manualmente.</span><span class="s1">&lt;/p&gt;</span>
+
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row justify-content-center mt-4&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6 col-12&quot;</span><span class="s1">&gt;</span>
+
+            <span class="s4">&lt;!-- LEITOR DE CÂMERA --&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm mb-4 border-primary&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-header bg-primary text-white text-center&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">📸 Leitor de QR Code</span>
+                <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body text-center p-2&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">id</span><span class="s3">=&quot;reader&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">width</span><span class="s0">: </span><span class="s5">100</span><span class="s0">%;</span><span class="s3">&quot;</span><span class="s1">&gt;&lt;/div&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+
+            <span class="s4">&lt;!-- FORMULÁRIO MANUAL --&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body text-center&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot; </span><span class="s2">id</span><span class="s3">=&quot;form-codigo&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">{% csrf_token %}</span>
+                        <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;codigo_input&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Ou digite o código alfanumérico:</span><span class="s1">&lt;/label&gt;</span>
+                        <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;text&quot; </span><span class="s2">name</span><span class="s3">=&quot;codigo&quot; </span><span class="s2">id</span><span class="s3">=&quot;codigo_input&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control form-control-lg text-center mb-3&quot; </span><span class="s2">placeholder</span><span class="s3">=&quot;Ex: 35WJGG&quot; </span><span class="s2">required</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success w-100 btn-lg&quot;</span><span class="s1">&gt;</span><span class="s0">Validar Código</span><span class="s1">&lt;/button&gt;</span>
+                    <span class="s1">&lt;/form&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+
+<span class="s1">&lt;script </span><span class="s2">src</span><span class="s3">=&quot;https://unpkg.com/html5-qrcode&quot; </span><span class="s2">type</span><span class="s3">=&quot;text/javascript&quot;</span><span class="s1">&gt;&lt;/script&gt;</span>
+<span class="s1">&lt;script&gt;</span>
+    <span class="s6">function </span><span class="s0">onScanSuccess(decodedText, decodedResult) {</span>
+        <span class="s4">// 1. Pára a câmera imediatamente</span>
+        <span class="s0">html5QrcodeScanner.clear();</span>
+
+        <span class="s4">// 2. Preenche o input</span>
+        <span class="s0">document.getElementById(</span><span class="s3">'codigo_input'</span><span class="s0">).value = decodedText;</span>
+
+        <span class="s4">// 3. NOVO: Mostra um aviso na tela e pausa tudo! (Dá tempo de você tirar o celular da frente da tela)</span>
+        <span class="s0">alert(</span><span class="s3">&quot;✅ QR Code identificado com sucesso!</span><span class="s6">\n\n</span><span class="s3">Clique em OK para confirmar a validação.&quot;</span><span class="s0">);</span>
+
+        <span class="s4">// 4. Só envia para o Django depois que você clicar em OK</span>
+        <span class="s0">document.getElementById(</span><span class="s3">'form-codigo'</span><span class="s0">).submit();</span>
+    <span class="s0">}</span>
+
+    <span class="s6">function </span><span class="s0">onScanFailure(error) {</span>
+        <span class="s4">// Ignora falhas contínuas</span>
+    <span class="s0">}</span>
+
+    <span class="s6">let </span><span class="s0">html5QrcodeScanner = </span><span class="s6">new </span><span class="s0">Html5QrcodeScanner(</span>
+        <span class="s3">&quot;reader&quot;</span><span class="s0">,</span>
+        <span class="s0">{ fps: </span><span class="s5">10</span><span class="s0">, qrbox: {width: </span><span class="s5">250</span><span class="s0">, height: </span><span class="s5">250</span><span class="s0">} },</span>
+        <span class="s6">false</span><span class="s0">);</span>
+    <span class="s0">html5QrcodeScanner.render(onScanSuccess, onScanFailure);</span>
+<span class="s1">&lt;/script&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

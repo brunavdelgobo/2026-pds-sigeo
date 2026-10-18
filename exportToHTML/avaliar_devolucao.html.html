@@ -1,0 +1,81 @@
+<html>
+<head>
+<title>avaliar_devolucao.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+avaliar_devolucao.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row justify-content-center mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-8&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-header bg-primary text-white&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;h4 </span><span class="s2">class</span><span class="s3">=&quot;mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Avaliação de Devolução</span><span class="s1">&lt;/h4&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;p&gt;</span><span class="s0">Aluno responsável: </span><span class="s1">&lt;strong&gt;</span><span class="s0">{{ emprestimo.usuario.nome_completo }}</span><span class="s1">&lt;/strong&gt;&lt;/p&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-info py-2&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">Avalie a condição de cada item. Se o aluno esqueceu de trazer algum objeto, marque como </span><span class="s1">&lt;strong&gt;</span><span class="s0">&quot;Ainda não devolvido&quot;</span><span class="s1">&lt;/strong&gt;</span><span class="s0">.</span>
+                <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;hr&gt;</span>
+
+                <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">{% csrf_token %}</span>
+
+                    <span class="s0">{% for item in itens %}</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mb-4 p-3 border rounded bg-light&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;text-primary mb-1&quot;</span><span class="s1">&gt;</span><span class="s0">{{ item.objeto.nome_objeto }}</span><span class="s1">&lt;/h5&gt;</span>
+                        <span class="s1">&lt;h6 </span><span class="s2">class</span><span class="s3">=&quot;text-muted small mb-3&quot;</span><span class="s1">&gt;</span><span class="s0">Patrimônio: {{ item.objeto.cg_patrimonio|default:&quot;Não informado&quot; }}</span><span class="s1">&lt;/h6&gt;</span>
+
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mb-2&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;condicao_{{ item.id }}&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Condição de retorno:</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;select </span><span class="s2">name</span><span class="s3">=&quot;condicao_{{ item.id }}&quot; </span><span class="s2">id</span><span class="s3">=&quot;condicao_{{ item.id }}&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-select border-primary&quot; </span><span class="s2">required</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;option </span><span class="s2">value</span><span class="s3">=&quot;&quot;</span><span class="s1">&gt;</span><span class="s0">-- Selecione o que aconteceu com este item --</span><span class="s1">&lt;/option&gt;</span>
+
+                                <span class="s4">&lt;!-- OPÇÃO DE DEVOLUÇÃO PARCIAL --&gt;</span>
+                                <span class="s1">&lt;option </span><span class="s2">value</span><span class="s3">=&quot;NAO_DEVOLVIDO&quot; </span><span class="s2">class</span><span class="s3">=&quot;text-danger fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">⚠️ Não devolvido (Ficou com o aluno)</span><span class="s1">&lt;/option&gt;</span>
+
+                                <span class="s0">{% for sigla, descricao in condicoes %}</span>
+                                    <span class="s1">&lt;option </span><span class="s2">value</span><span class="s3">=&quot;{{ sigla }}&quot; </span><span class="s2">{% if item.objeto.condicao </span><span class="s3">== </span><span class="s2">sigla %}selected{% endif %}</span><span class="s1">&gt;</span>
+                                        <span class="s0">{{ descricao }}</span>
+                                    <span class="s1">&lt;/option&gt;</span>
+                                <span class="s0">{% endfor %}</span>
+                            <span class="s1">&lt;/select&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+
+                        <span class="s4">&lt;!-- CAMPO DE OBSERVAÇÃO DE VOLTA --&gt;</span>
+                        <span class="s1">&lt;div&gt;</span>
+                            <span class="s1">&lt;label </span><span class="s2">for</span><span class="s3">=&quot;obs_{{ item.id }}&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-label text-muted small mb-1&quot;</span><span class="s1">&gt;</span><span class="s0">Observações / Descrição da Avaria (Opcional):</span><span class="s1">&lt;/label&gt;</span>
+                            <span class="s1">&lt;textarea </span><span class="s2">name</span><span class="s3">=&quot;obs_{{ item.id }}&quot; </span><span class="s2">id</span><span class="s3">=&quot;obs_{{ item.id }}&quot; </span><span class="s2">rows</span><span class="s3">=&quot;2&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control form-control-sm&quot; </span><span class="s2">placeholder</span><span class="s3">=&quot;Digite detalhes sobre peças faltando, arranhões, etc...&quot;</span><span class="s1">&gt;&lt;/textarea&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                    <span class="s0">{% endfor %}</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;form-text mb-4 text-center&quot;</span><span class="s1">&gt;</span><span class="s0">O pedido só será &quot;Concluído&quot; quando todos os itens forem retornados.</span><span class="s1">&lt;/div&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex justify-content-end gap-2&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'validar_codigo' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-secondary&quot;</span><span class="s1">&gt;</span><span class="s0">Cancelar</span><span class="s1">&lt;/a&gt;</span>
+                        <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success&quot;</span><span class="s1">&gt;</span><span class="s0">Confirmar Devolução</span><span class="s1">&lt;/button&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;/form&gt;</span>
+
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

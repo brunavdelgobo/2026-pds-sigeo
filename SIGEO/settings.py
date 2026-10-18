@@ -132,3 +132,7 @@ AUTH_USER_MODEL = 'SIGEO.Usuario'
 # Configuração de E-mail (Modo de Teste no Terminal)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 DEFAULT_FROM_EMAIL = 'sigeo@ifpr.edu.br' # Remetente padrão do sistema
+
+import os
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

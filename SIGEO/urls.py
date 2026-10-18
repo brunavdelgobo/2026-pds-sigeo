@@ -7,6 +7,8 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 from django.contrib import admin
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -33,3 +35,5 @@ urlpatterns = [
     path('aumentar-pedido/<int:subcategoria_id>/', views.aumentar_qtd_pedido, name='aumentar_qtd_pedido'),
     path('diminuir-pedido/<int:subcategoria_id>/', views.diminuir_qtd_pedido, name='diminuir_qtd_pedido'),
 ]
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

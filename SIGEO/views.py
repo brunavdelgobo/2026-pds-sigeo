@@ -16,6 +16,7 @@ from xhtml2pdf import pisa
 import csv
 from django.core.mail import send_mail
 from collections import Counter
+from django.contrib import messages
 
 
 def limpar_emprestimos_expirados():
@@ -383,22 +384,36 @@ def adicionar_ao_pedido(request, subcategoria_id):
         request.session['carrinho'] = []
 
     carrinho = request.session['carrinho']
-
-    # Pega a quantidade que o aluno digitou no HTML (padrão é 1 se não vier nada)
     quantidade = int(request.POST.get('quantidade', 1))
 
-    # Verifica quantas já tem no estoque para não deixar ele pedir mais do que existe
     subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
     qtd_disponivel = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL').count()
-
-    # Conta quantas ele já tem no carrinho para não exceder o limite
     qtd_no_carrinho = carrinho.count(subcategoria_id)
 
-    if (qtd_no_carrinho + quantidade) <= qtd_disponivel:
-        # Adiciona o ID no carrinho X vezes (ex: se pediu 3 bolas, adiciona [id, id, id])
+    limite_real = min(qtd_disponivel, subcat.limite_max_itens)
+
+    if (qtd_no_carrinho + quantidade) <= limite_real:
         for _ in range(quantidade):
             carrinho.append(subcategoria_id)
         request.session.modified = True
+
+        # MENSAGEM DE SUCESSO PADRÃO
+        messages.success(request,
+                         f"Objeto selecionado! Vá até 'Meu Pedido' para finalizar seu pedido de {subcat.nome_subcategoria}.")
+
+    else:
+        qtd_permitida = limite_real - qtd_no_carrinho
+        if qtd_permitida > 0:
+            for _ in range(qtd_permitida):
+                carrinho.append(subcategoria_id)
+            request.session.modified = True
+
+            # MENSAGEM DE AVISO (ADICIONOU MENOS DO QUE PEDIU)
+            messages.warning(request,
+                             f"Atenção: Você pediu {quantidade}, mas o limite disponível para você é {qtd_permitida}. Adicionamos {qtd_permitida} item(ns) ao carrinho.")
+        else:
+            # MENSAGEM DE ERRO (JÁ BATEU O LIMITE ANTES)
+            messages.error(request, f"Você já atingiu o limite máximo de {limite_real} para este item no seu carrinho.")
 
     return redirect('catalogo')
 
@@ -626,11 +641,13 @@ def aumentar_qtd_pedido(request, subcategoria_id):
     carrinho = request.session.get('carrinho', [])
     subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
 
-    # Verifica se ainda tem no estoque antes de deixar aumentar
     qtd_disponivel = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL').count()
     qtd_no_carrinho = carrinho.count(subcategoria_id)
 
-    if qtd_no_carrinho < qtd_disponivel:
+    # NOVO: Mesma regra de limite blindada para o botão de "+"
+    limite_real = min(qtd_disponivel, subcat.limite_max_itens)
+
+    if qtd_no_carrinho < limite_real:
         carrinho.append(subcategoria_id)
         request.session.modified = True
 

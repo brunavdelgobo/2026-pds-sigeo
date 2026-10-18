@@ -70,6 +70,19 @@
     </nav>
 
     <div class="container">
+
+        <!-- SISTEMA DE MENSAGENS FLUTUANTES (ALERTS) -->
+        {% if messages %}
+            <div class="mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <!-- Todo o conteúdo das outras páginas será injetado aqui -->
         {% block content %}
         {% endblock %}

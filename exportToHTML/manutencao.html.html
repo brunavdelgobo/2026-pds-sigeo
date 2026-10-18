@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>manutencao.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #cf8e6d;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+manutencao.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex justify-content-between align-items-center mb-3&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div&gt;</span>
+            <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;text-danger&quot;</span><span class="s1">&gt;</span><span class="s0">Objetos em Manutenção</span><span class="s1">&lt;/h2&gt;</span>
+            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Gerencie os itens avariados e retorne-os ao catálogo após o conserto.</span><span class="s1">&lt;/p&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;hr&gt;</span>
+
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row&quot;</span><span class="s1">&gt;</span>
+        <span class="s0">{% for obj in objetos %}</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-4 mb-4&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card h-100 border-danger shadow-sm&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-header bg-danger text-white&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">{{ obj.nome_objeto }}</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;card-text&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;strong&gt;</span><span class="s0">Patrimônio:</span><span class="s1">&lt;/strong&gt; </span><span class="s0">{{ obj.cg_patrimonio|default:&quot;Não informado&quot; }}</span><span class="s1">&lt;br&gt;</span>
+                            <span class="s1">&lt;strong&gt;</span><span class="s0">Categoria:</span><span class="s1">&lt;/strong&gt; </span><span class="s0">{{ obj.categoria.nome_categoria }}</span><span class="s1">&lt;br&gt;</span>
+                            <span class="s1">&lt;strong&gt;</span><span class="s0">Condição Atual:</span><span class="s1">&lt;/strong&gt; &lt;span </span><span class="s2">class</span><span class="s3">=&quot;text-danger&quot;</span><span class="s1">&gt;</span><span class="s0">{{ obj.get_condicao_display }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s1">&lt;/p&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-footer bg-transparent border-top-0&quot;</span><span class="s1">&gt;</span>
+                        <span class="s4">&lt;!-- O onclick exige uma confirmação antes de disparar o link --&gt;</span>
+                        <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'concluir_manutencao' obj.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-success w-100&quot; </span><span class="s2">onclick</span><span class="s3">=&quot;</span><span class="s5">return </span><span class="s0">confirm(</span><span class="s3">'Confirmar que o reparo foi concluído? O objeto voltará para o catálogo como Íntegro/Perfeito.'</span><span class="s0">);</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                            <span class="s0">Marcar como Consertado</span>
+                        <span class="s1">&lt;/a&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s0">{% empty %}</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-12&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-success text-center py-4&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;strong&gt;</span><span class="s0">Nenhum objeto em manutenção!</span><span class="s1">&lt;/strong&gt; </span><span class="s0">O acervo está 100% operacional.</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s0">{% endfor %}</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

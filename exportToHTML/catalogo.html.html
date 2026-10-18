@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>catalogo.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+catalogo.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;h1 </span><span class="s2">class</span><span class="s3">=&quot;text-primary&quot;</span><span class="s1">&gt;</span><span class="s0">Catálogo de Acervo Disponível</span><span class="s1">&lt;/h1&gt;</span>
+    <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead&quot;</span><span class="s1">&gt;</span><span class="s0">Escolha um item abaixo para adicionar à sua solicitação:</span><span class="s1">&lt;/p&gt;</span>
+
+    <span class="s4">&lt;!-- ALERTA DE BLOQUEIO NO TOPO --&gt;</span>
+    <span class="s0">{% if usuario_bloqueado %}</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-danger shadow-sm text-center&quot; </span><span class="s2">role</span><span class="s3">=&quot;alert&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;strong&gt;</span><span class="s0">Atenção!</span><span class="s1">&lt;/strong&gt; </span><span class="s0">Você possui materiais com devolução em atraso.</span>
+        <span class="s0">Novas solicitações estão </span><span class="s1">&lt;strong&gt;</span><span class="s0">bloqueadas</span><span class="s1">&lt;/strong&gt; </span><span class="s0">até a regularização.</span>
+    <span class="s1">&lt;/div&gt;</span>
+    <span class="s0">{% endif %}</span>
+
+    <span class="s4">&lt;!-- Formulário de Busca e Filtro --&gt;</span>
+    <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;GET&quot; </span><span class="s2">class</span><span class="s3">=&quot;row g-3 mb-4 bg-white p-3 shadow-sm rounded&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;text&quot; </span><span class="s2">name</span><span class="s3">=&quot;q&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control&quot; </span><span class="s2">placeholder</span><span class="s3">=&quot;Buscar por nome da categoria ou item...&quot; </span><span class="s2">value</span><span class="s3">=&quot;{{ busca_atual|default:'' }}&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-4&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;select </span><span class="s2">name</span><span class="s3">=&quot;categoria&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-select&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;option </span><span class="s2">value</span><span class="s3">=&quot;&quot;</span><span class="s1">&gt;</span><span class="s0">Todas as Categorias</span><span class="s1">&lt;/option&gt;</span>
+                <span class="s0">{% for cat in categorias %}</span>
+                    <span class="s1">&lt;option </span><span class="s2">value</span><span class="s3">=&quot;{{ cat.id }}&quot; </span><span class="s2">{% if categoria_atual </span><span class="s3">== </span><span class="s2">cat.id|stringformat:</span><span class="s0">&quot;s&quot; %}selected{% endif %}&gt;</span>
+                        <span class="s0">{{ cat.nome_categoria }}</span>
+                    <span class="s1">&lt;/option&gt;</span>
+                <span class="s0">{% endfor %}</span>
+            <span class="s1">&lt;/select&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-2&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-primary w-100&quot;</span><span class="s1">&gt;</span><span class="s0">Buscar</span><span class="s1">&lt;/button&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/form&gt;</span>
+
+    <span class="s1">&lt;hr&gt;</span>
+
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row&quot;</span><span class="s1">&gt;</span>
+        <span class="s4">&lt;!-- AQUI COMEÇA A MÁGICA DO ESTOQUE AGRUPADO --&gt;</span>
+        <span class="s0">{% for subcat in subcategorias %}</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-4 mb-4&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card h-100 shadow-sm border-0 bg-light overflow-hidden&quot;</span><span class="s1">&gt;</span>
+
+                    <span class="s4">&lt;!-- ÁREA DA IMAGEM DO ITEM --&gt;</span>
+                    <span class="s0">{% if subcat.imagem %}</span>
+                        <span class="s1">&lt;img </span><span class="s2">src</span><span class="s3">=&quot;{{ subcat.imagem.url }}&quot; </span><span class="s2">class</span><span class="s3">=&quot;card-img-top&quot; </span><span class="s2">alt</span><span class="s3">=&quot;{{ subcat.nome_subcategoria }}&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">height</span><span class="s0">: </span><span class="s5">200</span><span class="s3">px</span><span class="s0">; </span><span class="s2">object-fit</span><span class="s0">: </span><span class="s3">cover</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                    <span class="s0">{% else %}</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-img-top bg-white border-bottom d-flex justify-content-center align-items-center&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">height</span><span class="s0">: </span><span class="s5">200</span><span class="s3">px</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;text-center text-muted&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;i </span><span class="s2">class</span><span class="s3">=&quot;bi bi-camera&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">font-size</span><span class="s0">: </span><span class="s5">3</span><span class="s3">rem</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;&lt;/i&gt;</span>
+                                <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;mb-0 small mt-2&quot;</span><span class="s1">&gt;</span><span class="s0">Sem foto</span><span class="s1">&lt;/p&gt;</span>
+                            <span class="s1">&lt;/div&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s0">{% endif %}</span>
+                    <span class="s4">&lt;!-- FIM DA ÁREA DA IMAGEM --&gt;</span>
+
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex justify-content-between align-items-start mb-2&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title text-dark mb-0 fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">{{ subcat.nome_subcategoria }}</span><span class="s1">&lt;/h5&gt;</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-success rounded-pill px-3 py-2 shadow-sm&quot;</span><span class="s1">&gt;</span>
+                                <span class="s0">Disponíveis: {{ subcat.qtd_disponivel }}</span>
+                            <span class="s1">&lt;/span&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                        <span class="s1">&lt;h6 </span><span class="s2">class</span><span class="s3">=&quot;card-subtitle mb-3 text-secondary&quot;</span><span class="s1">&gt;</span><span class="s0">{{ subcat.categoria.nome_categoria }}</span><span class="s1">&lt;/h6&gt;</span>
+
+                        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-3&quot;</span><span class="s1">&gt;</span>
+                            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;card-text mb-1 small text-muted&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;i </span><span class="s2">class</span><span class="s3">=&quot;bi bi-clock-history me-1&quot;</span><span class="s1">&gt;&lt;/i&gt; &lt;strong&gt;</span><span class="s0">Prazo de devolução:</span><span class="s1">&lt;/strong&gt;</span>
+                                <span class="s0">{{ subcat.prazo_valor }} {{ subcat.get_prazo_unidade_display }}</span>
+                            <span class="s1">&lt;/p&gt;</span>
+                            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;card-text small text-muted&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;i </span><span class="s2">class</span><span class="s3">=&quot;bi bi-info-circle me-1&quot;</span><span class="s1">&gt;&lt;/i&gt; &lt;strong&gt;</span><span class="s0">Limite por pedido:</span><span class="s1">&lt;/strong&gt;</span>
+                                <span class="s0">{{ subcat.limite_max_itens }} item(ns)</span>
+                            <span class="s1">&lt;/p&gt;</span>
+                        <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-footer bg-white border-top-0 pt-0 pb-3&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">{% if not usuario_bloqueado %}</span>
+                            <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot; </span><span class="s2">action</span><span class="s3">=&quot;{% url 'adicionar_ao_pedido' subcat.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;d-flex gap-2&quot;</span><span class="s1">&gt;</span>
+                                <span class="s0">{% csrf_token %}</span>
+                                <span class="s1">&lt;input </span><span class="s2">type</span><span class="s3">=&quot;number&quot; </span><span class="s2">name</span><span class="s3">=&quot;quantidade&quot; </span><span class="s2">class</span><span class="s3">=&quot;form-control&quot; </span><span class="s2">value</span><span class="s3">=&quot;1&quot; </span><span class="s2">min</span><span class="s3">=&quot;1&quot; </span><span class="s2">max</span><span class="s3">=&quot;{{ subcat.qtd_disponivel }}&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">width</span><span class="s0">: </span><span class="s5">80</span><span class="s3">px</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;button </span><span class="s2">type</span><span class="s3">=&quot;submit&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-primary w-100 fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Adicionar</span><span class="s1">&lt;/button&gt;</span>
+                            <span class="s1">&lt;/form&gt;</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;button </span><span class="s2">class</span><span class="s3">=&quot;btn btn-secondary w-100&quot; </span><span class="s2">disabled</span><span class="s1">&gt;</span><span class="s0">Bloqueado (Em atraso)</span><span class="s1">&lt;/button&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/div&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s0">{% empty %}</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-12&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;alert alert-warning text-center shadow-sm&quot;</span><span class="s1">&gt;</span><span class="s0">Nenhum item disponível com estes filtros no momento.</span><span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s0">{% endfor %}</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>registrar.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+registrar.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends &quot;base.html&quot; %}</span>
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row justify-content-center&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-6&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card shadow-sm p-4&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;h3 </span><span class="s2">class</span><span class="s3">=&quot;text-center mb-4&quot;</span><span class="s1">&gt;</span><span class="s0">Cadastrar Novo Usuário</span><span class="s1">&lt;/h3&gt;</span>
+            
+            <span class="s1">&lt;form </span><span class="s2">method</span><span class="s3">=&quot;POST&quot;</span><span class="s1">&gt;</span>
+                <span class="s0">{% csrf_token %}</span>
+                <span class="s0">{{ form.as_p }}</span>
+                <span class="s1">&lt;button </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success w-100&quot; </span><span class="s2">type</span><span class="s3">=&quot;submit&quot;</span><span class="s1">&gt;</span><span class="s0">Salvar no Banco</span><span class="s1">&lt;/button&gt;</span>
+            <span class="s1">&lt;/form&gt;</span>
+            
+            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;mt-3 text-center&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;/login/&quot;</span><span class="s1">&gt;</span><span class="s0">Ir para o Login</span><span class="s1">&lt;/a&gt;</span>
+            <span class="s1">&lt;/p&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

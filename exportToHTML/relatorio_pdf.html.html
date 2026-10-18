@@ -1,0 +1,94 @@
+<html>
+<head>
+<title>relatorio_pdf.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #d5b778;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #cf8e6d;}
+.s5 { color: #2aacb8;}
+.s6 { color: #56a8f5;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+relatorio_pdf.html</font>
+</center></td></tr></table>
+<pre><span class="s0">&lt;!DOCTYPE </span><span class="s2">html</span><span class="s0">&gt;</span>
+<span class="s0">&lt;html </span><span class="s2">lang</span><span class="s3">=&quot;pt-br&quot;</span><span class="s0">&gt;</span>
+<span class="s0">&lt;head&gt;</span>
+    <span class="s0">&lt;meta </span><span class="s2">charset</span><span class="s3">=&quot;UTF-8&quot;</span><span class="s0">&gt;</span>
+    <span class="s0">&lt;title&gt;</span><span class="s1">Relatório de Inventário</span><span class="s0">&lt;/title&gt;</span>
+    <span class="s0">&lt;style&gt;</span>
+        <span class="s4">@page </span><span class="s1">{</span>
+            <span class="s2">size</span><span class="s1">: </span><span class="s0">A4</span><span class="s1">;</span>
+            <span class="s2">margin</span><span class="s1">: </span><span class="s5">2</span><span class="s3">cm</span><span class="s1">;</span>
+            <span class="s4">@frame </span><span class="s0">footer </span><span class="s1">{</span>
+                <span class="s2">-pdf-frame-content</span><span class="s1">: </span><span class="s0">footerContent</span><span class="s1">;</span>
+                <span class="s2">bottom</span><span class="s1">: </span><span class="s5">1</span><span class="s3">cm</span><span class="s1">;</span>
+                <span class="s2">margin-left</span><span class="s1">: </span><span class="s5">2</span><span class="s3">cm</span><span class="s1">;</span>
+                <span class="s2">margin-right</span><span class="s1">: </span><span class="s5">2</span><span class="s3">cm</span><span class="s1">;</span>
+                <span class="s2">height</span><span class="s1">: </span><span class="s5">1</span><span class="s3">cm</span><span class="s1">;</span>
+            <span class="s1">}</span>
+        <span class="s1">}</span>
+        <span class="s0">body </span><span class="s1">{ </span><span class="s2">font-family</span><span class="s1">: </span><span class="s0">Helvetica</span><span class="s1">, </span><span class="s3">sans-serif</span><span class="s1">; </span><span class="s2">font-size</span><span class="s1">: </span><span class="s5">12</span><span class="s3">px</span><span class="s1">; </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#333</span><span class="s1">; }</span>
+        <span class="s0">h1 </span><span class="s1">{ </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#0d6efd</span><span class="s1">; </span><span class="s2">text-align</span><span class="s1">: </span><span class="s3">center</span><span class="s1">; </span><span class="s2">margin-bottom</span><span class="s1">: </span><span class="s5">5</span><span class="s3">px</span><span class="s1">; }</span>
+        <span class="s0">h3 </span><span class="s1">{ </span><span class="s2">text-align</span><span class="s1">: </span><span class="s3">center</span><span class="s1">; </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#666</span><span class="s1">; </span><span class="s2">margin-top</span><span class="s1">: </span><span class="s5">0</span><span class="s1">; }</span>
+        <span class="s1">.</span><span class="s0">resumo </span><span class="s1">{ </span><span class="s2">margin-bottom</span><span class="s1">: </span><span class="s5">20</span><span class="s3">px</span><span class="s1">; </span><span class="s2">padding</span><span class="s1">: </span><span class="s5">10</span><span class="s3">px</span><span class="s1">; </span><span class="s2">background-color</span><span class="s1">: </span><span class="s6">#f8f9fa</span><span class="s1">; </span><span class="s2">border</span><span class="s1">: </span><span class="s5">1</span><span class="s3">px solid </span><span class="s6">#ddd</span><span class="s1">; }</span>
+        <span class="s0">table </span><span class="s1">{ </span><span class="s2">width</span><span class="s1">: </span><span class="s5">100</span><span class="s1">%; </span><span class="s2">border-collapse</span><span class="s1">: </span><span class="s3">collapse</span><span class="s1">; </span><span class="s2">margin-top</span><span class="s1">: </span><span class="s5">10</span><span class="s3">px</span><span class="s1">; }</span>
+        <span class="s0">th </span><span class="s1">{ </span><span class="s2">background-color</span><span class="s1">: </span><span class="s6">#343a40</span><span class="s1">; </span><span class="s2">color</span><span class="s1">: </span><span class="s3">white</span><span class="s1">; </span><span class="s2">padding</span><span class="s1">: </span><span class="s5">8</span><span class="s3">px</span><span class="s1">; </span><span class="s2">text-align</span><span class="s1">: </span><span class="s3">left</span><span class="s1">; }</span>
+        <span class="s0">td </span><span class="s1">{ </span><span class="s2">padding</span><span class="s1">: </span><span class="s5">8</span><span class="s3">px</span><span class="s1">; </span><span class="s2">border-bottom</span><span class="s1">: </span><span class="s5">1</span><span class="s3">px solid </span><span class="s6">#ddd</span><span class="s1">; }</span>
+        <span class="s1">.</span><span class="s0">disponivel </span><span class="s1">{ </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#198754</span><span class="s1">; </span><span class="s2">font-weight</span><span class="s1">: </span><span class="s3">bold</span><span class="s1">; }</span>
+        <span class="s1">.</span><span class="s0">emprestado </span><span class="s1">{ </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#ffc107</span><span class="s1">; </span><span class="s2">font-weight</span><span class="s1">: </span><span class="s3">bold</span><span class="s1">; }</span>
+        <span class="s1">.</span><span class="s0">manutencao </span><span class="s1">{ </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#dc3545</span><span class="s1">; </span><span class="s2">font-weight</span><span class="s1">: </span><span class="s3">bold</span><span class="s1">; }</span>
+        <span class="s1">.</span><span class="s0">inativo </span><span class="s1">{ </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#6c757d</span><span class="s1">; </span><span class="s2">font-weight</span><span class="s1">: </span><span class="s3">bold</span><span class="s1">; }</span>
+    <span class="s0">&lt;/style&gt;</span>
+<span class="s0">&lt;/head&gt;</span>
+<span class="s0">&lt;body&gt;</span>
+
+    <span class="s0">&lt;h1&gt;</span><span class="s1">SIGEO - Sistema de Gestão de Empréstimos</span><span class="s0">&lt;/h1&gt;</span>
+    <span class="s0">&lt;h3&gt;</span><span class="s1">Relatório Completo de Inventário</span><span class="s0">&lt;/h3&gt;</span>
+
+    <span class="s0">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;resumo&quot;</span><span class="s0">&gt;</span>
+        <span class="s0">&lt;strong&gt;</span><span class="s1">Resumo do Acervo (Gerado em: {{ data_geracao|date:&quot;d/m/Y H:i&quot; }}):</span><span class="s0">&lt;/strong&gt;&lt;br&gt;</span>
+        <span class="s1">Total de Itens: {{ total }} |</span>
+        <span class="s1">Disponíveis: {{ disponiveis }} |</span>
+        <span class="s1">Emprestados: {{ emprestados }} |</span>
+        <span class="s1">Em Manutenção: {{ manutencao }}</span>
+    <span class="s0">&lt;/div&gt;</span>
+
+    <span class="s0">&lt;table&gt;</span>
+        <span class="s0">&lt;thead&gt;</span>
+            <span class="s0">&lt;tr&gt;</span>
+                <span class="s0">&lt;th&gt;</span><span class="s1">Patrimônio</span><span class="s0">&lt;/th&gt;</span>
+                <span class="s0">&lt;th&gt;</span><span class="s1">Objeto</span><span class="s0">&lt;/th&gt;</span>
+                <span class="s0">&lt;th&gt;</span><span class="s1">Categoria</span><span class="s0">&lt;/th&gt;</span>
+                <span class="s0">&lt;th&gt;</span><span class="s1">Condição</span><span class="s0">&lt;/th&gt;</span>
+                <span class="s0">&lt;th&gt;</span><span class="s1">Status Atual</span><span class="s0">&lt;/th&gt;</span>
+            <span class="s0">&lt;/tr&gt;</span>
+        <span class="s0">&lt;/thead&gt;</span>
+        <span class="s0">&lt;tbody&gt;</span>
+            <span class="s1">{% for obj in objetos %}</span>
+            <span class="s0">&lt;tr&gt;</span>
+                <span class="s0">&lt;td&gt;</span><span class="s1">{{ obj.cg_patrimonio|default:&quot;S/N&quot; }}</span><span class="s0">&lt;/td&gt;</span>
+                <span class="s0">&lt;td&gt;</span><span class="s1">{{ obj.nome_objeto }}</span><span class="s0">&lt;/td&gt;</span>
+                <span class="s0">&lt;td&gt;</span><span class="s1">{{ obj.categoria.nome_categoria }}</span><span class="s0">&lt;/td&gt;</span>
+                <span class="s0">&lt;td&gt;</span><span class="s1">{{ obj.get_condicao_display }}</span><span class="s0">&lt;/td&gt;</span>
+                <span class="s0">&lt;td </span><span class="s2">class</span><span class="s3">=&quot;{{ obj.status|lower }}&quot;</span><span class="s0">&gt;</span><span class="s1">{{ obj.get_status_display }}</span><span class="s0">&lt;/td&gt;</span>
+            <span class="s0">&lt;/tr&gt;</span>
+            <span class="s1">{% endfor %}</span>
+        <span class="s0">&lt;/tbody&gt;</span>
+    <span class="s0">&lt;/table&gt;</span>
+
+    <span class="s0">&lt;div </span><span class="s2">id</span><span class="s3">=&quot;footerContent&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">text-align</span><span class="s1">: </span><span class="s3">right</span><span class="s1">; </span><span class="s2">font-size</span><span class="s1">: </span><span class="s5">10</span><span class="s3">px</span><span class="s1">; </span><span class="s2">color</span><span class="s1">: </span><span class="s6">#777</span><span class="s1">;</span><span class="s3">&quot;</span><span class="s0">&gt;</span>
+        <span class="s1">Página </span><span class="s0">&lt;pdf:pagenumber&gt; </span><span class="s1">de </span><span class="s0">&lt;pdf:pagecount&gt;</span>
+    <span class="s0">&lt;/div&gt;</span>
+
+<span class="s0">&lt;/body&gt;</span>
+<span class="s0">&lt;/html&gt;</span></pre>
+</body>
+</html>

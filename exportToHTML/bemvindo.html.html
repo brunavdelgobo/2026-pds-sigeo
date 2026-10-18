@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>bemvindo.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+bemvindo.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends &quot;base.html&quot; %}</span>
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;text-center mt-5&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;h2&gt;</span><span class="s0">Você está logado! 🎉</span><span class="s1">&lt;/h2&gt;</span>
+    <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead&quot;</span><span class="s1">&gt;</span><span class="s0">Bem-vindo(a), </span><span class="s1">&lt;strong&gt;</span><span class="s0">{{ nome }}</span><span class="s1">&lt;/strong&gt;</span><span class="s0">!</span><span class="s1">&lt;/p&gt;</span>
+    <span class="s1">&lt;p&gt;</span><span class="s0">Seu perfil de acesso é: </span><span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-primary&quot;</span><span class="s1">&gt;</span><span class="s0">{{ perfil }}</span><span class="s1">&lt;/span&gt;&lt;/p&gt;</span>
+    
+    <span class="s1">&lt;hr </span><span class="s2">class</span><span class="s3">=&quot;my-4&quot;</span><span class="s1">&gt;</span>
+    
+    <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;/logout/&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-danger&quot;</span><span class="s1">&gt;</span><span class="s0">Sair (Logout)</span><span class="s1">&lt;/a&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

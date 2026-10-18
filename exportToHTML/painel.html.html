@@ -1,0 +1,156 @@
+<html>
+<head>
+<title>painel.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+.s5 { color: #2aacb8;}
+.s6 { color: #cf8e6d;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+painel.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex justify-content-between align-items-center mb-3&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div&gt;</span>
+            <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;text-primary&quot;</span><span class="s1">&gt;</span><span class="s0">Meus Empréstimos</span><span class="s1">&lt;/h2&gt;</span>
+            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Acompanhe o status das suas solicitações, </span><span class="s1">&lt;strong&gt;</span><span class="s0">{{ nome }}</span><span class="s1">&lt;/strong&gt;</span><span class="s0">.</span><span class="s1">&lt;/p&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-info text-dark fs-6&quot;</span><span class="s1">&gt;</span><span class="s0">Perfil: {{ perfil }}</span><span class="s1">&lt;/span&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;hr&gt;</span>
+
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;table-responsive&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;table </span><span class="s2">class</span><span class="s3">=&quot;table table-striped table-hover mt-3 shadow-sm bg-white rounded align-middle&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;thead </span><span class="s2">class</span><span class="s3">=&quot;table-dark&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Status</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Itens Solicitados</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Data de Expiração</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s4">&lt;!-- Juntamos as duas colunas em uma só! --&gt;</span>
+                    <span class="s1">&lt;th </span><span class="s2">class</span><span class="s3">=&quot;text-center&quot;</span><span class="s1">&gt;</span><span class="s0">Código (QR)</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th </span><span class="s2">class</span><span class="s3">=&quot;text-center&quot;</span><span class="s1">&gt;</span><span class="s0">Ações</span><span class="s1">&lt;/th&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+            <span class="s1">&lt;/thead&gt;</span>
+            <span class="s1">&lt;tbody&gt;</span>
+                <span class="s0">{% for emp in emprestimos %}</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;td&gt;</span>
+                        <span class="s0">{% if emp.status_geral == 'PENDENTE' %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-warning text-dark&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% elif emp.status_geral == 'APROVADO' or emp.status_geral == 'ATIVO' %}</span>
+                            <span class="s0">{% if emp.esta_atrasado %}</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-danger&quot;</span><span class="s1">&gt;</span><span class="s0">ATRASADO</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s0">{% else %}</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-success&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s0">{% endif %}</span>
+                        <span class="s0">{% elif emp.status_geral == 'CANCELADO' %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-danger&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-secondary&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/td&gt;</span>
+
+                    <span class="s1">&lt;td&gt;</span>
+                        <span class="s1">&lt;ul </span><span class="s2">class</span><span class="s3">=&quot;list-unstyled mb-0 small&quot;</span><span class="s1">&gt;</span>
+                            <span class="s0">{% for item in emp.itens.all %}</span>
+                                <span class="s1">&lt;li </span><span class="s2">class</span><span class="s3">=&quot;mb-1&quot;</span><span class="s1">&gt;</span>
+                                    <span class="s0">{% if item.status_item == 'DEVOLVIDO' %}</span>
+                                        <span class="s1">&lt;del </span><span class="s2">class</span><span class="s3">=&quot;text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">{{ item.objeto.nome_objeto }}</span><span class="s1">&lt;/del&gt;</span>
+                                        <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-light text-success border border-success ms-1&quot; </span><span class="s2">style</span><span class="s3">=&quot;</span><span class="s2">font-size</span><span class="s0">: </span><span class="s5">0.7</span><span class="s3">em</span><span class="s0">;</span><span class="s3">&quot;</span><span class="s1">&gt;</span><span class="s0">DEVOLVIDO</span><span class="s1">&lt;/span&gt;</span>
+                                    <span class="s0">{% else %}</span>
+                                        <span class="s1">&lt;strong&gt;</span><span class="s0">{{ item.objeto.nome_objeto }}</span><span class="s1">&lt;/strong&gt;</span>
+                                    <span class="s0">{% endif %}</span>
+                                <span class="s1">&lt;/li&gt;</span>
+                            <span class="s0">{% endfor %}</span>
+                        <span class="s1">&lt;/ul&gt;</span>
+                    <span class="s1">&lt;/td&gt;</span>
+
+                    <span class="s1">&lt;td&gt;</span><span class="s0">{{ emp.data_expiracao|date:&quot;d/m/Y H:i&quot; }}</span><span class="s1">&lt;/td&gt;</span>
+
+                    <span class="s4">&lt;!-- A MÁGICA ACONTECE AQUI --&gt;</span>
+                    <span class="s1">&lt;td </span><span class="s2">class</span><span class="s3">=&quot;text-center align-middle&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">{% if emp.status_geral == 'PENDENTE' %}</span>
+                            <span class="s4">&lt;!-- Mostra SÓ o código de Retirada --&gt;</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-warning text-dark mb-1&quot;</span><span class="s1">&gt;</span><span class="s0">Para Retirar</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex flex-column align-items-center justify-content-center&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;qrcode mb-2&quot; </span><span class="s2">data-text</span><span class="s3">=&quot;{{ emp.codigo_retirada }}&quot;</span><span class="s1">&gt;&lt;/div&gt;</span>
+                                <span class="s1">&lt;strong </span><span class="s2">class</span><span class="s3">=&quot;text-uppercase font-monospace small bg-light border px-2 py-1 rounded&quot;</span><span class="s1">&gt;</span>
+                                    <span class="s0">{{ emp.codigo_retirada }}</span>
+                                <span class="s1">&lt;/strong&gt;</span>
+                            <span class="s1">&lt;/div&gt;</span>
+                        <span class="s0">{% elif emp.status_geral == 'ATIVO' %}</span>
+                            <span class="s4">&lt;!-- Mostra SÓ o código de Devolução --&gt;</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-info text-dark mb-1&quot;</span><span class="s1">&gt;</span><span class="s0">Para Devolver</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex flex-column align-items-center justify-content-center&quot;</span><span class="s1">&gt;</span>
+                                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;qrcode mb-2&quot; </span><span class="s2">data-text</span><span class="s3">=&quot;{{ emp.codigo_devolucao }}&quot;</span><span class="s1">&gt;&lt;/div&gt;</span>
+                                <span class="s1">&lt;strong </span><span class="s2">class</span><span class="s3">=&quot;text-uppercase font-monospace small bg-light border px-2 py-1 rounded&quot;</span><span class="s1">&gt;</span>
+                                    <span class="s0">{{ emp.codigo_devolucao }}</span>
+                                <span class="s1">&lt;/strong&gt;</span>
+                            <span class="s1">&lt;/div&gt;</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">-</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/td&gt;</span>
+
+                    <span class="s1">&lt;td </span><span class="s2">class</span><span class="s3">=&quot;text-center align-middle&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">{% if emp.status_geral == 'PENDENTE' %}</span>
+                            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'cancelar_emprestimo' emp.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-sm btn-outline-danger w-100&quot; </span><span class="s2">onclick</span><span class="s3">=&quot;</span><span class="s6">return </span><span class="s0">confirm(</span><span class="s3">'Tem certeza que deseja cancelar este pedido?'</span><span class="s0">)</span><span class="s3">&quot;</span><span class="s1">&gt;</span><span class="s0">Cancelar</span><span class="s1">&lt;/a&gt;</span>
+                        <span class="s0">{% elif emp.status_geral == 'ATIVO' %}</span>
+                            <span class="s0">{% if emp.esta_atrasado %}</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;text-danger small fw-bold&quot;</span><span class="s1">&gt;</span><span class="s0">Bloqueado</span><span class="s1">&lt;br&gt;</span><span class="s0">(Em Atraso)</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s0">{% else %}</span>
+                                <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'renovar_emprestimo' emp.id %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-sm btn-outline-primary w-100&quot; </span><span class="s2">onclick</span><span class="s3">=&quot;</span><span class="s6">return </span><span class="s0">confirm(</span><span class="s3">'Deseja estender o prazo de devolução?'</span><span class="s0">)</span><span class="s3">&quot;</span><span class="s1">&gt;</span><span class="s0">Renovar Prazo</span><span class="s1">&lt;/a&gt;</span>
+                            <span class="s0">{% endif %}</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">-</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/td&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+                <span class="s0">{% empty %}</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;td </span><span class="s2">colspan</span><span class="s3">=&quot;5&quot; </span><span class="s2">class</span><span class="s3">=&quot;text-center py-4 text-muted&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">Você ainda não possui nenhuma solicitação de empréstimo.</span><span class="s1">&lt;br&gt;</span>
+                        <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'catalogo' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-sm btn-primary mt-2&quot;</span><span class="s1">&gt;</span><span class="s0">Acessar Catálogo</span><span class="s1">&lt;/a&gt;</span>
+                    <span class="s1">&lt;/td&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+                <span class="s0">{% endfor %}</span>
+            <span class="s1">&lt;/tbody&gt;</span>
+        <span class="s1">&lt;/table&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+
+<span class="s1">&lt;script </span><span class="s2">src</span><span class="s3">=&quot;https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js&quot;</span><span class="s1">&gt;&lt;/script&gt;</span>
+<span class="s1">&lt;script&gt;</span>
+    <span class="s0">document.addEventListener(</span><span class="s3">&quot;DOMContentLoaded&quot;</span><span class="s0">, </span><span class="s6">function</span><span class="s0">() {</span>
+        <span class="s6">var </span><span class="s0">qrElements = document.querySelectorAll(</span><span class="s3">'.qrcode'</span><span class="s0">);</span>
+
+        <span class="s0">qrElements.forEach(</span><span class="s6">function</span><span class="s0">(el) {</span>
+            <span class="s6">var </span><span class="s0">texto = el.getAttribute(</span><span class="s3">'data-text'</span><span class="s0">);</span>
+            <span class="s6">if </span><span class="s0">(texto) {</span>
+                <span class="s6">new </span><span class="s0">QRCode(el, {</span>
+                    <span class="s0">text: texto,</span>
+                    <span class="s0">width: </span><span class="s5">100</span><span class="s0">,</span>
+                    <span class="s0">height: </span><span class="s5">100</span><span class="s0">,</span>
+                    <span class="s0">colorDark : </span><span class="s3">&quot;#000000&quot;</span><span class="s0">,</span>
+                    <span class="s0">colorLight : </span><span class="s3">&quot;#ffffff&quot;</span><span class="s0">,</span>
+                    <span class="s0">correctLevel : QRCode.CorrectLevel.H</span>
+                <span class="s0">});</span>
+            <span class="s0">}</span>
+        <span class="s0">});</span>
+    <span class="s0">});</span>
+<span class="s1">&lt;/script&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>

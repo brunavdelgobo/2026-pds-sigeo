@@ -69,6 +69,7 @@ class Subcategoria(models.Model):
     limite_max_itens = models.PositiveIntegerField(default=1)
     prazo_valor = models.PositiveIntegerField(default=1, help_text="Ex: 3")
     prazo_unidade = models.CharField(max_length=10, choices=UNIDADES_TEMPO, default='DIAS', help_text="Horas ou Dias")
+    imagem = models.ImageField(upload_to='imagens_catalogo/', null=True, blank=True)
 
     def __str__(self):
         # Vai aparecer no Admin ex: "Bolas de Vôlei (3 Horas)"

@@ -1,0 +1,125 @@
+<html>
+<head>
+<title>gerenciar_emprestimos.html</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #bcbec4;}
+.s1 { color: #d5b778;}
+.s2 { color: #bababa;}
+.s3 { color: #6aab73;}
+.s4 { color: #7a7e85;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+gerenciar_emprestimos.html</font>
+</center></td></tr></table>
+<pre><span class="s0">{% extends 'base.html' %}</span>
+
+<span class="s0">{% block content %}</span>
+<span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;mt-4&quot;</span><span class="s1">&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;d-flex justify-content-between align-items-center mb-3&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div&gt;</span>
+            <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;text-primary&quot;</span><span class="s1">&gt;</span><span class="s0">Gestão de Empréstimos</span><span class="s1">&lt;/h2&gt;</span>
+            <span class="s1">&lt;p </span><span class="s2">class</span><span class="s3">=&quot;lead mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">Visão geral de todas as solicitações e do acervo.</span><span class="s1">&lt;/p&gt;</span>
+        <span class="s1">&lt;div&gt;</span>
+            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'validar_codigo' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-success&quot;</span><span class="s1">&gt;</span><span class="s0">Validar um Código</span><span class="s1">&lt;/a&gt;</span>
+            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'relatorio_inventario_pdf' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-danger ms-2&quot; </span><span class="s2">target</span><span class="s3">=&quot;_blank&quot;</span><span class="s1">&gt;</span><span class="s0">📄 Baixar PDF</span><span class="s1">&lt;/a&gt;</span>
+            <span class="s1">&lt;a </span><span class="s2">href</span><span class="s3">=&quot;{% url 'relatorio_inventario_csv' %}&quot; </span><span class="s2">class</span><span class="s3">=&quot;btn btn-outline-success ms-2&quot;</span><span class="s1">&gt;</span><span class="s0">📊 CSV</span><span class="s1">&lt;/a&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;hr&gt;</span>
+
+    <span class="s4">&lt;!-- PAINEL DE ESTATÍSTICAS --&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;row mb-4 text-center&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-3 mb-2&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card bg-primary text-white shadow-sm h-100&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title&quot;</span><span class="s1">&gt;</span><span class="s0">Acervo Total</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;display-6 fw-bold mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">{{ total_objetos }}</span><span class="s1">&lt;/h2&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-3 mb-2&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card bg-success text-white shadow-sm h-100&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title&quot;</span><span class="s1">&gt;</span><span class="s0">Disponíveis</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;display-6 fw-bold mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">{{ disponiveis }}</span><span class="s1">&lt;/h2&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-3 mb-2&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card bg-warning text-dark shadow-sm h-100&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title&quot;</span><span class="s1">&gt;</span><span class="s0">Emprestados</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;display-6 fw-bold mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emprestados }}</span><span class="s1">&lt;/h2&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;col-md-3 mb-2&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card bg-danger text-white shadow-sm h-100&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;card-body&quot;</span><span class="s1">&gt;</span>
+                    <span class="s1">&lt;h5 </span><span class="s2">class</span><span class="s3">=&quot;card-title&quot;</span><span class="s1">&gt;</span><span class="s0">Em Manutenção</span><span class="s1">&lt;/h5&gt;</span>
+                    <span class="s1">&lt;h2 </span><span class="s2">class</span><span class="s3">=&quot;display-6 fw-bold mb-0&quot;</span><span class="s1">&gt;</span><span class="s0">{{ em_manutencao }}</span><span class="s1">&lt;/h2&gt;</span>
+                <span class="s1">&lt;/div&gt;</span>
+            <span class="s1">&lt;/div&gt;</span>
+        <span class="s1">&lt;/div&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+
+    <span class="s4">&lt;!-- TABELA DE EMPRÉSTIMOS --&gt;</span>
+    <span class="s1">&lt;div </span><span class="s2">class</span><span class="s3">=&quot;table-responsive&quot;</span><span class="s1">&gt;</span>
+        <span class="s1">&lt;table </span><span class="s2">class</span><span class="s3">=&quot;table table-striped table-hover shadow-sm bg-white rounded align-middle&quot;</span><span class="s1">&gt;</span>
+            <span class="s1">&lt;thead </span><span class="s2">class</span><span class="s3">=&quot;table-dark&quot;</span><span class="s1">&gt;</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">ID</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Solicitante</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Status</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Expira em</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Retirada</span><span class="s1">&lt;/th&gt;</span>
+                    <span class="s1">&lt;th&gt;</span><span class="s0">Devolução</span><span class="s1">&lt;/th&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+            <span class="s1">&lt;/thead&gt;</span>
+            <span class="s1">&lt;tbody&gt;</span>
+                <span class="s0">{% for emp in emprestimos %}</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;td&gt;</span><span class="s0">#{{ emp.id }}</span><span class="s1">&lt;/td&gt;</span>
+                    <span class="s1">&lt;td&gt;</span>
+                        <span class="s1">&lt;strong&gt;</span><span class="s0">{{ emp.usuario.nome_completo }}</span><span class="s1">&lt;/strong&gt;&lt;br&gt;</span>
+                        <span class="s1">&lt;small </span><span class="s2">class</span><span class="s3">=&quot;text-muted&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.usuario.email }}</span><span class="s1">&lt;/small&gt;</span>
+                    <span class="s1">&lt;/td&gt;</span>
+                    <span class="s1">&lt;td&gt;</span>
+                        <span class="s0">{% if emp.status_geral == 'PENDENTE' %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-warning text-dark&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% elif emp.status_geral == 'ATIVO' %}</span>
+                            <span class="s0">{% if emp.esta_atrasado %}</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-danger&quot;</span><span class="s1">&gt;</span><span class="s0">ATRASADO</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s0">{% else %}</span>
+                                <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-primary&quot;</span><span class="s1">&gt;</span><span class="s0">ATIVO</span><span class="s1">&lt;/span&gt;</span>
+                            <span class="s0">{% endif %}</span>
+                        <span class="s0">{% elif emp.status_geral == 'CONCLUIDO' %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-success&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% elif emp.status_geral == 'CANCELADO' %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-secondary&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% else %}</span>
+                            <span class="s1">&lt;span </span><span class="s2">class</span><span class="s3">=&quot;badge bg-dark&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.status_geral }}</span><span class="s1">&lt;/span&gt;</span>
+                        <span class="s0">{% endif %}</span>
+                    <span class="s1">&lt;/td&gt;</span>
+                    <span class="s1">&lt;td&gt;</span><span class="s0">{{ emp.data_expiracao|date:&quot;d/m/Y H:i&quot; }}</span><span class="s1">&lt;/td&gt;</span>
+                    <span class="s1">&lt;td </span><span class="s2">class</span><span class="s3">=&quot;font-monospace text-uppercase&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.codigo_retirada|default:&quot;-&quot; }}</span><span class="s1">&lt;/td&gt;</span>
+                    <span class="s1">&lt;td </span><span class="s2">class</span><span class="s3">=&quot;font-monospace text-uppercase&quot;</span><span class="s1">&gt;</span><span class="s0">{{ emp.codigo_devolucao|default:&quot;-&quot; }}</span><span class="s1">&lt;/td&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+                <span class="s0">{% empty %}</span>
+                <span class="s1">&lt;tr&gt;</span>
+                    <span class="s1">&lt;td </span><span class="s2">colspan</span><span class="s3">=&quot;6&quot; </span><span class="s2">class</span><span class="s3">=&quot;text-center py-4 text-muted&quot;</span><span class="s1">&gt;</span>
+                        <span class="s0">Nenhum empréstimo registrado no sistema ainda.</span>
+                    <span class="s1">&lt;/td&gt;</span>
+                <span class="s1">&lt;/tr&gt;</span>
+                <span class="s0">{% endfor %}</span>
+            <span class="s1">&lt;/tbody&gt;</span>
+        <span class="s1">&lt;/table&gt;</span>
+    <span class="s1">&lt;/div&gt;</span>
+<span class="s1">&lt;/div&gt;</span>
+<span class="s0">{% endblock %}</span></pre>
+</body>
+</html>
