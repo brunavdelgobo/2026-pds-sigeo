@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,14 +81,11 @@ WSGI_APPLICATION = 'SIGEO.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sigeo_db',
-        'USER': 'postgres',
-        'PASSWORD': '270225#',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.parse(
+        'postgresql://neondb_owner:npg_zstiglJ0TwK4@ep-square-bird-b62vjeqd-pooler.c-2.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
+        conn_max_age=600,
+        ssl_require=True
+    )
 }
 
 
