@@ -45,14 +45,34 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return self.nome_completo
 
 
-# Acervo
+# --- 2. ACERVO ---
+
 class Categoria(models.Model):
+    # Ex: "Equipamentos Esportivos", "Audiovisual"
     nome_categoria = models.CharField(max_length=100, unique=True)
-    limite_max_itens = models.PositiveIntegerField(default=1)
-    prazo_dias = models.PositiveIntegerField(default=7)
 
     def __str__(self):
         return self.nome_categoria
+
+
+class Subcategoria(models.Model):
+    UNIDADES_TEMPO = (
+        ('HORAS', 'Horas'),
+        ('DIAS', 'Dias'),
+    )
+
+    # Ex: "Bolas de Vôlei" pertence a "Equipamentos Esportivos"
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='subcategorias')
+    nome_subcategoria = models.CharField(max_length=100)
+
+    # As regras de negócio ficam aqui agora!
+    limite_max_itens = models.PositiveIntegerField(default=1)
+    prazo_valor = models.PositiveIntegerField(default=1, help_text="Ex: 3")
+    prazo_unidade = models.CharField(max_length=10, choices=UNIDADES_TEMPO, default='DIAS', help_text="Horas ou Dias")
+
+    def __str__(self):
+        # Vai aparecer no Admin ex: "Bolas de Vôlei (3 Horas)"
+        return f"{self.nome_subcategoria} ({self.prazo_valor} {self.get_prazo_unidade_display()})"
 
 
 class Objeto(models.Model):
@@ -69,7 +89,10 @@ class Objeto(models.Model):
 
     cg_patrimonio = models.CharField(max_length=50, unique=True, null=True, blank=True)
     nome_objeto = models.CharField(max_length=150)
-    categoria = models.ForeignKey(Categoria, on_delete=models.PROTECT, related_name='objetos')
+
+    # O objeto agora se liga à subcategoria (e herda a categoria mãe por tabela)
+    subcategoria = models.ForeignKey(Subcategoria, on_delete=models.PROTECT, related_name='objetos')
+
     status = models.CharField(max_length=15, choices=STATUS_OBJETO, default='DISPONIVEL')
     condicao = models.CharField(max_length=15, choices=CONDICAO_FISICA, default='INTEGRO')
     descricao = models.TextField(blank=True, null=True)

@@ -2,11 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
-from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria
+from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria, Subcategoria
 import uuid
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Q
+from django.db.models import Q, Count
 import random
 import string
 from django.contrib.auth import update_session_auth_hash
@@ -15,6 +15,7 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import csv
 from django.core.mail import send_mail
+from collections import Counter
 
 
 def limpar_emprestimos_expirados():
@@ -135,38 +136,38 @@ def painel(request):
 def catalogo_objetos(request):
     limpar_emprestimos_expirados()
 
-    # --- LÓGICA DE BLOQUEIO (RF24) ---
     usuario_bloqueado = False
-    # Puxa os empréstimos ativos do usuário logado
     emprestimos_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO')
     for emp in emprestimos_ativos:
         if emp.esta_atrasado():
             usuario_bloqueado = True
-            break  # Achou um atrasado, já pode parar de procurar e aplicar o bloqueio
-    # --------------------------------
+            break
 
-    objetos_disponiveis = Objeto.objects.filter(status='DISPONIVEL')
+    # AQUI --> Em vez de buscar Objetos, buscamos as Subcategorias (Ex: "Bolas de Vôlei")
+    # E o Django já conta quantos objetos 'DISPONIVEIS' existem dentro de cada uma!
+    subcategorias = Subcategoria.objects.annotate(
+        qtd_disponivel=Count('objetos', filter=Q(objetos__status='DISPONIVEL'))
+    ).filter(qtd_disponivel__gt=0) # Só mostra se tiver 1 ou mais no estoque
+
     categorias = Categoria.objects.all()
-
     query = request.GET.get('q')
     categoria_id = request.GET.get('categoria')
 
     if query:
-        objetos_disponiveis = objetos_disponiveis.filter(
-            Q(nome_objeto__icontains=query) |
-            Q(descricao__icontains=query) |
-            Q(cg_patrimonio__icontains=query)
+        subcategorias = subcategorias.filter(
+            Q(nome_subcategoria__icontains=query) |
+            Q(categoria__nome_categoria__icontains=query)
         )
 
     if categoria_id:
-        objetos_disponiveis = objetos_disponiveis.filter(categoria_id=categoria_id)
+        subcategorias = subcategorias.filter(categoria_id=categoria_id)
 
     contexto = {
-        'objetos': objetos_disponiveis,
+        'subcategorias': subcategorias, # AQUI --> Mandamos para o front-end
         'categorias': categorias,
         'busca_atual': query,
         'categoria_atual': str(categoria_id) if categoria_id else '',
-        'usuario_bloqueado': usuario_bloqueado  # Mandamos a informação para a tela!
+        'usuario_bloqueado': usuario_bloqueado
     }
     return render(request, 'catalogo.html', contexto)
 
@@ -377,38 +378,54 @@ def concluir_manutencao(request, objeto_id):
 
 
 @login_required(login_url='/login/')
-def adicionar_ao_pedido(request, objeto_id):
-    # Se o carrinho não existir na sessão do usuario, cria uma lista vazia
+def adicionar_ao_pedido(request, subcategoria_id):
     if 'carrinho' not in request.session:
         request.session['carrinho'] = []
 
     carrinho = request.session['carrinho']
 
-    # Só adiciona se o objeto já não estiver no carrinho
-    if objeto_id not in carrinho:
-        carrinho.append(objeto_id)
-        # Avisa o Django que a sessão foi modificada e precisa ser salva
+    # Pega a quantidade que o aluno digitou no HTML (padrão é 1 se não vier nada)
+    quantidade = int(request.POST.get('quantidade', 1))
+
+    # Verifica quantas já tem no estoque para não deixar ele pedir mais do que existe
+    subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
+    qtd_disponivel = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL').count()
+
+    # Conta quantas ele já tem no carrinho para não exceder o limite
+    qtd_no_carrinho = carrinho.count(subcategoria_id)
+
+    if (qtd_no_carrinho + quantidade) <= qtd_disponivel:
+        # Adiciona o ID no carrinho X vezes (ex: se pediu 3 bolas, adiciona [id, id, id])
+        for _ in range(quantidade):
+            carrinho.append(subcategoria_id)
         request.session.modified = True
 
-        # Redireciona de volta para o catálogo para ele continuar escolhendo
     return redirect('catalogo')
 
 
 @login_required(login_url='/login/')
 def revisar_pedido(request):
-    # Pega os IDs salvos na sessão (ou uma lista vazia se não tiver nada)
     carrinho_ids = request.session.get('carrinho', [])
 
-    # Busca no banco os objetos reais usando os IDs
-    objetos_no_carrinho = Objeto.objects.filter(id__in=carrinho_ids)
+    # O Counter agrupa os itens. Ex: Se tem 5 bolas, ele faz {id_da_bola: 5}
+    contagem = Counter(carrinho_ids)
+
+    itens_carrinho = []
+    total_itens = len(carrinho_ids)
+
+    # Montamos uma lista bonitinha para mandar para o HTML
+    for sub_id, qtd in contagem.items():
+        subcat = get_object_or_404(Subcategoria, id=sub_id)
+        itens_carrinho.append({
+            'subcategoria': subcat,
+            'quantidade': qtd
+        })
 
     if request.method == 'POST':
-        if not objetos_no_carrinho:
+        if not itens_carrinho:
             return redirect('catalogo')
 
-        # 1. Cria o "Guarda-chuva" (O Empréstimo principal)
-        # Exemplo: o aluno tem 24h para ir retirar no balcão
-        data_expiracao = timezone.now() + timedelta(hours=3)
+        data_expiracao = timezone.now() + timedelta(hours=24)
         codigo_ret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         codigo_dev = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
@@ -420,61 +437,52 @@ def revisar_pedido(request):
             status_geral='PENDENTE'
         )
 
-        # 2. Cria os Itens individuais dentro deste empréstimo
-        for obj in objetos_no_carrinho:
-            # Puxa o prazo de dias diretamente da categoria do objeto
-            prazo = obj.categoria.prazo_dias
-            data_devolucao = timezone.now() + timedelta(days=prazo)
+        # Agora passamos por cada grupo (Ex: 5 Bolas de Vôlei)
+        for item in itens_carrinho:
+            subcat = item['subcategoria']
+            quantidade = item['quantidade']
 
-            ItemEmprestimo.objects.create(
-                emprestimo=novo_emprestimo,
-                objeto=obj,
-                data_devolucao_prevista=data_devolucao,
-                status_item='AGUARDANDO_RETIRADA'
-            )
+            # Puxamos exatamente a quantidade de objetos que ele pediu!
+            objetos_livres = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL')[:quantidade]
 
-            # Muda o status do objeto para que ninguém mais pegue no catálogo
-            obj.status = 'EMPRESTADO'
-            obj.save()
+            for objeto_livre in objetos_livres:
+                if subcat.prazo_unidade == 'HORAS':
+                    data_devolucao = timezone.now() + timedelta(hours=subcat.prazo_valor)
+                else:
+                    data_devolucao = timezone.now() + timedelta(days=subcat.prazo_valor)
 
-            # 3. Limpa o carrinho
-            request.session['carrinho'] = []
-            request.session.modified = True
+                ItemEmprestimo.objects.create(
+                    emprestimo=novo_emprestimo,
+                    objeto=objeto_livre,
+                    data_devolucao_prevista=data_devolucao,
+                    status_item='AGUARDANDO_RETIRADA'
+                )
 
-            # Converte a data para o fuso horário local antes de formatar para o texto
-            data_local = timezone.localtime(novo_emprestimo.data_expiracao)
-            data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
+                objeto_livre.status = 'EMPRESTADO'
+                objeto_livre.save()
 
-            # 4. Envia o e-mail de confirmação para o aluno
-            assunto = f"SIGEO - Pedido Solicitado (Código: {novo_emprestimo.codigo_retirada})"
-            mensagem = (
-                f"Olá, {request.user.nome_completo}!\n\n"
-                f"Sua solicitação foi registrada com sucesso.\n\n"
-                f"Você tem até o dia {data_formatada} "
-                f"para ir ao balcão retirar seus itens.\n\n"
-                f"Apresente este código de retirada: {novo_emprestimo.codigo_retirada}\n\n"
-                f"Atenciosamente,\nEquipe SIGEO - IFPR"
-            )
+        # Limpa o carrinho
+        request.session['carrinho'] = []
+        request.session.modified = True
 
-            # Parâmetros: Assunto, Mensagem, Remetente, Lista de Destinatários
-            send_mail(
-                assunto,
-                mensagem,
-                None,  # Usa o DEFAULT_FROM_EMAIL do settings
-                [request.user.email]
-            )
+        data_local = timezone.localtime(novo_emprestimo.data_expiracao)
+        data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
 
-            return redirect('painel')
+        # Se tiver configurado disparo de email, a lógica fica aqui...
 
-    return render(request, 'revisar_pedido.html', {'objetos': objetos_no_carrinho})
+        return redirect('painel')
 
+    return render(request, 'revisar_pedido.html', {
+        'itens_carrinho': itens_carrinho,
+        'total_itens': total_itens
+    })
 
 @login_required(login_url='/login/')
-def remover_do_pedido(request, objeto_id):
+def remover_do_pedido(request, subcategoria_id):
     carrinho = request.session.get('carrinho', [])
-    if objeto_id in carrinho:
-        carrinho.remove(objeto_id)
-        request.session.modified = True
+    # Filtra a lista mantendo apenas os IDs diferentes do que o aluno clicou para remover
+    request.session['carrinho'] = [item_id for item_id in carrinho if item_id != subcategoria_id]
+    request.session.modified = True
     return redirect('revisar_pedido')
 
 
@@ -482,25 +490,24 @@ def remover_do_pedido(request, objeto_id):
 def renovar_emprestimo(request, emprestimo_id):
     emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user, status_geral='ATIVO')
 
-    # Só renova se não estiver atrasado
     if not emprestimo.esta_atrasado():
         nova_data_maxima = emprestimo.data_expiracao
         itens_pendentes = emprestimo.itens.exclude(status_item='DEVOLVIDO')
 
-        # 1. Atualiza cada item com o seu prazo específico da categoria
         for item in itens_pendentes:
-            # Puxa o prazo dinâmico da categoria daquele objeto específico
-            prazo_dias = item.objeto.categoria.prazo_dias
+            subcat = item.objeto.subcategoria
 
-            # Adiciona os dias específicos
-            item.data_devolucao_prevista += timedelta(days=prazo_dias)
+            # AQUI --> Lógica de horas/dias aplicada também na renovação
+            if subcat.prazo_unidade == 'HORAS':
+                item.data_devolucao_prevista += timedelta(hours=subcat.prazo_valor)
+            else:
+                item.data_devolucao_prevista += timedelta(days=subcat.prazo_valor)
+
             item.save()
 
-            # Descobre qual é a data mais distante para atualizar o pedido principal
             if item.data_devolucao_prevista > nova_data_maxima:
                 nova_data_maxima = item.data_devolucao_prevista
 
-        # 2. Atualiza a data geral do empréstimo para bater com o último item a ser devolvido
         if itens_pendentes.exists():
             emprestimo.data_expiracao = nova_data_maxima
             emprestimo.save()
@@ -612,3 +619,28 @@ def relatorio_inventario_csv(request):
         ])
 
     return response
+
+
+@login_required(login_url='/login/')
+def aumentar_qtd_pedido(request, subcategoria_id):
+    carrinho = request.session.get('carrinho', [])
+    subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
+
+    # Verifica se ainda tem no estoque antes de deixar aumentar
+    qtd_disponivel = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL').count()
+    qtd_no_carrinho = carrinho.count(subcategoria_id)
+
+    if qtd_no_carrinho < qtd_disponivel:
+        carrinho.append(subcategoria_id)
+        request.session.modified = True
+
+    return redirect('revisar_pedido')
+
+
+@login_required(login_url='/login/')
+def diminuir_qtd_pedido(request, subcategoria_id):
+    carrinho = request.session.get('carrinho', [])
+    if subcategoria_id in carrinho:
+        carrinho.remove(subcategoria_id)  # Remove apenas UMA unidade (a primeira que achar)
+        request.session.modified = True
+    return redirect('revisar_pedido')

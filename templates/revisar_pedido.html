@@ -9,19 +9,45 @@
     <div class="row">
         <div class="col-md-8">
             <div class="list-group shadow-sm mb-4">
-                {% for obj in objetos %}
+                <!-- AGORA O FOR RODA PELO NOSSO PACOTE (item) -->
+                {% for item in itens_carrinho %}
                     <div class="list-group-item d-flex justify-content-between align-items-center p-3">
-                        <div>
-                            <h5 class="mb-1">{{ obj.nome_objeto }}</h5>
-                            <small class="text-muted">Categoria: {{ obj.categoria.nome_categoria }} | Patrimônio: {{ obj.cg_patrimonio|default:"N/A" }}</small>
-                            <br>
-                            <small class="text-info fw-bold">Prazo de empréstimo: {{ obj.categoria.prazo_dias }} dias</small>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- MINIATURA DA FOTO (Se já tiver configurado) -->
+                            {% if item.subcategoria.imagem %}
+                                <img src="{{ item.subcategoria.imagem.url }}" class="rounded shadow-sm" alt="{{ item.subcategoria.nome_subcategoria }}" style="width: 70px; height: 70px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex justify-content-center align-items-center shadow-sm border" style="width: 70px; height: 70px;">
+                                    <i class="bi bi-camera text-muted fs-4"></i>
+                                </div>
+                            {% endif %}
+
+                            <div>
+                                <!-- Acessamos o subcat usando item.subcategoria -->
+                                <h5 class="mb-1">{{ item.subcategoria.nome_subcategoria }}</h5>
+                                <small class="text-muted">Categoria: {{ item.subcategoria.categoria.nome_categoria }}</small>
+                                <br>
+                                <!-- PRAZO DINÂMICO -->
+                                <small class="text-info fw-bold">Prazo de empréstimo: {{ item.subcategoria.prazo_valor }} {{ item.subcategoria.get_prazo_unidade_display }}</small>
+                            </div>
                         </div>
-                        <a href="{% url 'remover_do_pedido' obj.id %}" class="btn btn-sm btn-outline-danger">Remover</a>
+
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- CONTROLES DE QUANTIDADE (+ E -) -->
+                            <div class="input-group input-group-sm" style="width: 110px;">
+                                <a href="{% url 'diminuir_qtd_pedido' item.subcategoria.id %}" class="btn btn-outline-secondary fw-bold px-3">-</a>
+                                <span class="input-group-text bg-white fw-bold flex-grow-1 justify-content-center">{{ item.quantidade }}</span>
+                                <a href="{% url 'aumentar_qtd_pedido' item.subcategoria.id %}" class="btn btn-outline-secondary fw-bold px-3">+</a>
+                            </div>
+
+                            <!-- BOTÃO REMOVER -->
+                            <a href="{% url 'remover_do_pedido' item.subcategoria.id %}" class="btn btn-sm btn-outline-danger">Remover Tudo</a>
+                        </div>
                     </div>
                 {% empty %}
                     <div class="list-group-item text-center py-5">
-                        <p class="text-muted mb-0">Você ainda não selecionou nenhum objeto.</p>
+                        <p class="text-muted mb-0">Você ainda não selecionou nenhum item.</p>
                     </div>
                 {% endfor %}
             </div>
@@ -31,14 +57,16 @@
             <div class="card shadow-sm border-primary">
                 <div class="card-body">
                     <h5 class="card-title">Resumo</h5>
-                    <p class="card-text">Total de itens: <strong>{{ objetos|length }}</strong></p>
+                    <!-- AGORA MOSTRA O NÚMERO TOTAL REAL (ex: 5) -->
+                    <p class="card-text">Total de itens no pedido: <strong>{{ total_itens }}</strong></p>
+
                     <div class="alert alert-warning small">
-                        Você terá <strong>24 horas</strong> para retirar os objetos no balcão após a confirmação.
+                        Você terá <strong>24 horas</strong> para retirar os itens no balcão após a confirmação.
                     </div>
-                    
+
                     <form method="POST">
                         {% csrf_token %}
-                        {% if objetos %}
+                        {% if total_itens > 0 %}
                             <button type="submit" class="btn btn-success w-100 btn-lg">Confirmar Solicitação</button>
                         {% else %}
                             <a href="{% url 'catalogo' %}" class="btn btn-primary w-100">Voltar ao Catálogo</a>
