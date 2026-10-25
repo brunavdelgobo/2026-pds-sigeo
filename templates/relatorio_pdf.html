@@ -5,50 +5,95 @@
     <title>Relatório de Inventário</title>
     <style>
         @page {
-            size: A4;
+            size: A4 portrait;
             margin: 2cm;
             @frame footer {
-                -pdf-frame-content: footerContent;
+                -pdf-frame-content: footer_content;
                 bottom: 1cm;
                 margin-left: 2cm;
                 margin-right: 2cm;
                 height: 1cm;
             }
         }
-        body { font-family: Helvetica, sans-serif; font-size: 12px; color: #333; }
-        h1 { color: #0d6efd; text-align: center; margin-bottom: 5px; }
-        h3 { text-align: center; color: #666; margin-top: 0; }
-        .resumo { margin-bottom: 20px; padding: 10px; background-color: #f8f9fa; border: 1px solid #ddd; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background-color: #343a40; color: white; padding: 8px; text-align: left; }
-        td { padding: 8px; border-bottom: 1px solid #ddd; }
-        .disponivel { color: #198754; font-weight: bold; }
-        .emprestado { color: #ffc107; font-weight: bold; }
-        .manutencao { color: #dc3545; font-weight: bold; }
-        .inativo { color: #6c757d; font-weight: bold; }
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #333333;
+            font-size: 12px;
+        }
+        .cabecalho {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .cabecalho h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .cabecalho p {
+            color: #7f8c8d;
+            font-size: 10px;
+        }
+        .resumo-box {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        table.tabela-dados {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table.tabela-dados th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+        }
+        table.tabela-dados td {
+            border-bottom: 1px solid #ddd;
+            padding: 8px;
+        }
+        /* Efeito zebrado para facilitar a leitura */
+        table.tabela-dados tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .status-disponivel { color: #27ae60; font-weight: bold; }
+        .status-emprestado { color: #e67e22; font-weight: bold; }
+        .status-manutencao { color: #c0392b; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>SIGEO - Sistema de Gestão de Empréstimos</h1>
-    <h3>Relatório Completo de Inventário</h3>
-
-    <div class="resumo">
-        <strong>Resumo do Acervo (Gerado em: {{ data_geracao|date:"d/m/Y H:i" }}):</strong><br>
-        Total de Itens: {{ total }} |
-        Disponíveis: {{ disponiveis }} |
-        Emprestados: {{ emprestados }} |
-        Em Manutenção: {{ manutencao }}
+    <!-- Rodapé fixo com paginação (Oculto no corpo, renderizado pelo @page) -->
+    <div id="footer_content" style="text-align: right; font-size: 9px; color: #666;">
+        Página <pdf:pagenumber> de <pdf:pagecount>
     </div>
 
-    <table>
+    <!-- Cabeçalho -->
+    <div class="cabecalho">
+        <h1>Relatório de Inventário - SIGEO</h1>
+        <p>Gerado em: {{ data_geracao|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <!-- Quadro de Resumo -->
+    <div class="resumo-box">
+        <strong>Total de Itens:</strong> {{ total }} &nbsp;|&nbsp;
+        <span style="color: #27ae60;"><strong>Disponíveis:</strong> {{ disponiveis }}</span> &nbsp;|&nbsp;
+        <span style="color: #e67e22;"><strong>Emprestados:</strong> {{ emprestados }}</span> &nbsp;|&nbsp;
+        <span style="color: #c0392b;"><strong>Em Manutenção:</strong> {{ manutencao }}</span>
+    </div>
+
+    <!-- Tabela Principal -->
+    <table class="tabela-dados">
         <thead>
             <tr>
                 <th>Patrimônio</th>
                 <th>Objeto</th>
-                <th>Categoria</th>
+                <th>Subcategoria</th>
                 <th>Condição</th>
-                <th>Status Atual</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -56,17 +101,27 @@
             <tr>
                 <td>{{ obj.cg_patrimonio|default:"S/N" }}</td>
                 <td>{{ obj.nome_objeto }}</td>
-                <td>{{ obj.categoria.nome_categoria }}</td>
+                <td>{{ obj.subcategoria|default:"Sem Subcategoria" }}</td>
                 <td>{{ obj.get_condicao_display }}</td>
-                <td class="{{ obj.status|lower }}">{{ obj.get_status_display }}</td>
+                <td>
+                    <!-- Colore o status dinamicamente -->
+                    <span class="
+                        {% if obj.status == 'DISPONIVEL' %}status-disponivel
+                        {% elif obj.status == 'EMPRESTADO' %}status-emprestado
+                        {% elif obj.status == 'MANUTENCAO' %}status-manutencao
+                        {% endif %}
+                    ">
+                        {{ obj.get_status_display }}
+                    </span>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center;">Nenhum objeto encontrado.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-
-    <div id="footerContent" style="text-align: right; font-size: 10px; color: #777;">
-        Página <pdf:pagenumber> de <pdf:pagecount>
-    </div>
 
 </body>
 </html>

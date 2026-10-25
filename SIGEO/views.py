@@ -575,8 +575,8 @@ def relatorio_inventario_pdf(request):
     if not request.user.is_staff:
         return redirect('painel')
 
-    # Busca todos os objetos ordenados primeiro por categoria, depois por nome
-    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+    # Correção: Ordenando por subcategoria e nome
+    objetos = Objeto.objects.all().order_by('subcategoria', 'nome_objeto')
 
     contexto = {
         'objetos': objetos,
@@ -587,16 +587,12 @@ def relatorio_inventario_pdf(request):
         'data_geracao': timezone.now()
     }
 
-    # Carrega o HTML que será usado como "molde"
     template = get_template('relatorio_pdf.html')
     html = template.render(contexto)
 
-    # Configura a resposta para forçar o download de um arquivo PDF
     response = HttpResponse(content_type='application/pdf')
-    # Use 'attachment' para baixar direto, ou 'inline' para abrir no navegador antes
     response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.pdf"'
 
-    # Converte o HTML em PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
 
     if pisa_status.err:
@@ -610,25 +606,22 @@ def relatorio_inventario_csv(request):
     if not request.user.is_staff:
         return redirect('painel')
 
-    # Configura a resposta para baixar um arquivo CSV
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.csv"'
 
     response.write('\ufeff')
 
-    # Cria o "escritor" do arquivo
     writer = csv.writer(response, delimiter=';')
+    # Cabeçalho atualizado
+    writer.writerow(['Patrimônio', 'Objeto', 'Subcategoria', 'Condição', 'Status Atual'])
 
-    # Escreve a primeira linha (Cabeçalhos das colunas)
-    writer.writerow(['Patrimônio', 'Objeto', 'Categoria', 'Condição', 'Status Atual'])
-
-    # Busca os objetos e escreve uma linha para cada um
-    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+    # Correção: Ordenando por subcategoria e nome
+    objetos = Objeto.objects.all().order_by('subcategoria', 'nome_objeto')
     for obj in objetos:
         writer.writerow([
             obj.cg_patrimonio if obj.cg_patrimonio else 'S/N',
             obj.nome_objeto,
-            obj.categoria.nome_categoria,
+            str(obj.subcategoria) if obj.subcategoria else 'Sem Subcategoria', # Puxa o nome automaticamente
             obj.get_condicao_display(),
             obj.get_status_display()
         ])
