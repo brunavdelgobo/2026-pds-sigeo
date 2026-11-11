@@ -1,0 +1,67 @@
+/* FUNDOOOO DA PÁGINAAAAAAAAA */
+body {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #3b82f6 100%) !important;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Caixa central de login com efeito de vidro (Glassmorphism) */
+.card {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    margin-top: 40px;
+}
+
+/* Título do Card */
+.card h3 {
+    color: #1e293b;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+/* Estilo dos campos de texto (Email e Senha) */
+.form-control {
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+}
+
+.form-control:focus {
+    border-color: #2563eb !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Botão Principal de Entrar */
+.btn-primary {
+    background-color: #2563eb !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8 !important;
+    transform: translateY(-1px);
+}
+
+/* Links de rodapé (Esqueci minha senha / Criar conta) */
+a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
