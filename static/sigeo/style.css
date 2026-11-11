@@ -8,7 +8,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Caixa central de login com efeito de vidro (Glassmorphism) */
+/* BOOOOX CENTRALLLLLL */
 .card {
     border: none !important;
     border-radius: 16px !important;
@@ -18,9 +18,11 @@ body {
     margin-top: 40px;
 }
 
-/* Título do Card */
+
+
+/* tituuuuuuulo */
 .card h3 {
-    color: #1e293b;
+    color: #3b82f6;
     font-weight: 700;
     letter-spacing: -0.5px;
 }
