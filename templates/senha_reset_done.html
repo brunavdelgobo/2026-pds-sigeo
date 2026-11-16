@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center mt-5">
-    <h3 class="text-success">E-mail Enviado! ✉️</h3>
-    <p class="lead">Verifique sua caixa de entrada (e a pasta de spam).</p>
-    <p>Enviamos as instruções para você criar uma nova senha.</p>
-    <a href="{% url 'login' %}" class="btn btn-outline-primary mt-3">Voltar ao Login</a>
+<div class="auth-wrapper">
+    <div class="auth-card-single">
+        <h3>E-mail Enviado! ✉️</h3>
+        <p>Verifique sua caixa de entrada (e a pasta de spam). Enviamos as instruções para você criar uma nova senha.</p>
+        <a href="{% url 'login' %}" class="btn-submit d-inline-block text-decoration-none px-4">Voltar ao Login</a>
+    </div>
 </div>
 {% endblock %}

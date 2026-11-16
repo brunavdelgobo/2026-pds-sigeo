@@ -1,32 +1,64 @@
 {% extends "base.html" %}
-{% block content %}
+{% load static %}
 
-<div class="row justify-content-center align-items-center" style="min-height: calc(100vh - 80px);">
-    <div class="col-md-5">
-        <div class="card shadow-sm p-4">
-            <h3 class="text-center mb-4">Entrar no SIGEO</h3>
-            
-            <form method="POST">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label>Email</label>
-                    <input type="email" name="email" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>Senha</label>
-                    <input type="password" name="senha" class="form-control" required>
-                </div>
-                <button class="btn btn-primary w-100" type="submit">Entrar</button>
-            </form>
-            
-            {% if erro %}
-            <div class="alert alert-danger mt-3">{{ erro }}</div>
-            {% endif %}
-            <p class="mt-3 text-center">
-                <a href="{% url 'password_reset' %}" class="text-decoration-none">Esqueci minha senha</a><br>
-                <a href="{% url 'registrar' %}" class="text-decoration-none fw-bold mt-2 d-inline-block">Criar uma conta</a>
-            </p>
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-card login-active" id="authCard">
+
+        <!-- LADO ESQUERDO 13!!!!!!!!!!!!!!!!!!!! -->
+        <div class="auth-side left">
+            <!-- Formulário de Login (o seu login antigo, agora integrado) -->
+            <div class="form-box form-login">
+                <h2>Entrar no SIGEO</h2>
+                <form method="POST" action="{% url 'login' %}">
+                    {% csrf_token %}
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="password" name="senha" placeholder="Senha" required>
+
+                    <a href="{% url 'password_reset' %}" class="forgot-link">Esqueci minha senha</a>
+                    <button type="submit" class="btn-submit">Entrar</button>
+                </form>
+
+                {% if erro %}
+                    <div class="alert alert-danger mt-2 p-2 small w-100">{{ erro }}</div>
+                {% endif %}
+            </div>
+
+            <!-- volta login -->
+            <div class="overlay-box go-login">
+                <h2>Já tem uma conta?</h2>
+                <p>Acesse o SIGEO com suas credenciais para gerenciar seus empréstimos.</p>
+                <button type="button" class="btn-switch" id="btnToLogin">Faça Login</button>
+            </div>
         </div>
+
+        <!-- lado direito eca -->
+        <div class="auth-side right">
+            <!-- Formulário de Cadastro -->
+            <div class="form-box form-cadastro">
+                <h2>Criar Conta</h2>
+                <form method="POST" action="{% url 'registrar' %}">
+                    {% csrf_token %}
+                    <input type="text" name="nome_completo" placeholder="Nome completo" required>
+                    <input type="email" name="email" placeholder="Email institucional ou pessoal" required>
+                    <input type="text" name="matricula" placeholder="Matrícula / SIAPE" required>
+                    <input type="text" name="telefone" placeholder="Telefone (com DDD)" required>
+                    <input type="password" name="senha" placeholder="Senha" required>
+
+                    <button type="submit" class="btn-submit">Cadastrar</button>
+                </form>
+            </div>
+
+            <!-- vai cadastro -->
+            <div class="overlay-box go-cadastro">
+                <h2>Não tem uma conta?</h2>
+                <p>Cadastre-se no sistema para reservar equipamentos e acompanhar pedidos.</p>
+                <button type="button" class="btn-switch" id="btnToCadastro">Cadastre-se</button>
+            </div>
+        </div>
+
     </div>
 </div>
+
+<script src="{% static 'sigeo/auth.js' %}" defer></script>
 {% endblock %}
