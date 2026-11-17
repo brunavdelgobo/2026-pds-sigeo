@@ -76,9 +76,16 @@
     outline: none;
     font-size: 0.95rem;
 }
-
 .form-box input::placeholder {
     color: rgba(255, 255, 255, 0.65);
+}
+
+/* Email e Senha */
+.form-control {
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
 }
 
 .btn-submit {
@@ -92,10 +99,20 @@
     margin-top: 6px;
     transition: opacity 0.2s, transform 0.2s;
 }
-
 .btn-submit:hover {
     opacity: 0.9;
     transform: translateY(-2px);
+}
+
+/* botão de entrar */
+.btn-primary {
+    background-color: #2563eb !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
 }
 
 .btn-switch {
@@ -126,7 +143,6 @@
     color: #fff;
 }
 
-
 .auth-card.login-active .go-login,
 .auth-card.login-active .form-cadastro {
     opacity: 0;
@@ -147,7 +163,6 @@
     -webkit-box-shadow: 0 0 0px 1000px #34373b inset;
     transition: background-color 5000s ease-in-out 0s;
 }
-
 
 .auth-card-single {
     width: 460px;
@@ -172,7 +187,6 @@
     margin-bottom: 20px;
 }
 
-
 .auth-card-single form p {
     text-align: left;
     margin-bottom: 14px;
@@ -191,7 +205,6 @@
     outline: none;
     margin-top: 6px;
 }
-
 
 .auth-card-single ul {
     text-align: left;
