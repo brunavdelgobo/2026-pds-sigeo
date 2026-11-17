@@ -1,134 +1,98 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="container py-4">
+    <!-- Cabeçalho da Página com Título e Perfil Alinhados -->
+    <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <h2 class="text-primary">Meus Empréstimos</h2>
-            <p class="lead mb-0">Acompanhe o status das suas solicitações, <strong>{{ nome }}</strong>.</p>
+            <!-- Título principal com cor de destaque e maior -->
+            <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Meus Empréstimos
+            </h1>
+            <p class="text-muted fs-5 mb-0">Acompanhe o status e o histórico das suas solicitações no acervo, <strong>{{ user.nome_completo }}</strong>.</p>
         </div>
-        <span class="badge bg-info text-dark fs-6">Perfil: {{ perfil }}</span>
+        <div>
+            <span class="badge bg-primary bg-opacity-10 text-primary px-4 py-2 rounded-pill fw-semibold fs-5 shadow-sm">
+                Perfil: {% if user.is_staff %}Administrador{% else %}Solicitante{% endif %}
+            </span>
+        </div>
     </div>
-    <hr>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover mt-3 shadow-sm bg-white rounded align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>Status</th>
-                    <th>Itens Solicitados</th>
-                    <th>Data de Expiração</th>
-                    <!-- Juntamos as duas colunas em uma só! -->
-                    <th class="text-center">Código (QR)</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for emp in emprestimos %}
-                <tr>
-                    <td>
-                        {% if emp.status_geral == 'PENDENTE' %}
-                            <span class="badge bg-warning text-dark">{{ emp.status_geral }}</span>
-                        {% elif emp.status_geral == 'APROVADO' or emp.status_geral == 'ATIVO' %}
-                            {% if emp.esta_atrasado %}
-                                <span class="badge bg-danger">ATRASADO</span>
-                            {% else %}
-                                <span class="badge bg-success">{{ emp.status_geral }}</span>
-                            {% endif %}
-                        {% elif emp.status_geral == 'CANCELADO' %}
-                            <span class="badge bg-danger">{{ emp.status_geral }}</span>
-                        {% else %}
-                            <span class="badge bg-secondary">{{ emp.status_geral }}</span>
-                        {% endif %}
-                    </td>
+    <!-- TABELA DE EMPRÉSTIMOS MODERNA E AMPLIADA -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white" style="border-color: rgba(0,0,0,0.06) !important;">
+        <div class="card-header bg-white py-4 px-4 border-bottom border-light">
+            <!-- Título da Tabela maior -->
+            <h4 class="mb-0 fw-bold text-dark fs-4">
+                <i class="bi bi-clock-history me-2 text-primary"></i> Histórico de Solicitações
+            </h4>
+        </div>
 
-                    <td>
-                        <ul class="list-unstyled mb-0 small">
-                            {% for item in emp.itens.all %}
-                                <li class="mb-1">
-                                    {% if item.status_item == 'DEVOLVIDO' %}
-                                        <del class="text-muted">{{ item.objeto.nome_objeto }}</del>
-                                        <span class="badge bg-light text-success border border-success ms-1" style="font-size: 0.7em;">DEVOLVIDO</span>
-                                    {% else %}
-                                        <strong>{{ item.objeto.nome_objeto }}</strong>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 py-3">
+                <thead class="table-light text-uppercase text-secondary" style="font-size: 0.85rem; letter-spacing: 0.8px;">
+                    <tr>
+                        <!-- Colunas maiores e com cores personalizadas -->
+                        <th class="py-3 px-4 fw-bold text-primary">Status</th>
+                        <th class="py-3 fw-bold text-dark">Pedido ID</th>
+                        <th class="py-3 fw-bold text-secondary">Data de Expiração</th>
+                        <th class="py-3 text-center fw-bold text-info">Código (Retirada)</th>
+                        <th class="py-3 text-center px-4 fw-bold text-danger">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emprestimo in emprestimos %}
+                        <tr>
+                            <!-- Coluna de Status com Etiqueta Suave -->
+                            <td class="py-4 px-4">
+                                <span class="badge rounded-pill px-3 py-2 fw-semibold fs-6
+                                    {% if emprestimo.status_geral == 'CONCLUIDO' %} bg-success bg-opacity-10 text-success
+                                    {% elif emprestimo.status_geral == 'ATIVO' %} bg-primary bg-opacity-10 text-primary
+                                    {% elif emprestimo.status_geral == 'PENDENTE' %} bg-warning bg-opacity-10 text-warning text-dark
+                                    {% elif emprestimo.status_geral == 'ATRASADO' or emprestimo.status_geral == 'EXPIRADO' %} bg-danger bg-opacity-10 text-danger
+                                    {% else %} bg-secondary bg-opacity-10 text-secondary {% endif %}">
+                                    {{ emprestimo.get_status_geral_display|default:emprestimo.status_geral }}
+                                </span>
+                            </td>
 
-                    <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
+                            <!-- ID do Pedido -->
+                            <td class="py-4">
+                                <span class="fw-bold text-dark fs-6">#Pedido {{ emprestimo.id }}</span>
+                            </td>
 
-                    <!-- A MÁGICA ACONTECE AQUI -->
-                    <td class="text-center align-middle">
-                        {% if emp.status_geral == 'PENDENTE' %}
-                            <!-- Mostra SÓ o código de Retirada -->
-                            <span class="badge bg-warning text-dark mb-1">Para Retirar</span>
-                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                <div class="qrcode mb-2" data-text="{{ emp.codigo_retirada }}"></div>
-                                <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
-                                    {{ emp.codigo_retirada }}
-                                </strong>
-                            </div>
-                        {% elif emp.status_geral == 'ATIVO' %}
-                            <!-- Mostra SÓ o código de Devolução -->
-                            <span class="badge bg-info text-dark mb-1">Para Devolver</span>
-                            <div class="d-flex flex-column align-items-center justify-content-center">
-                                <div class="qrcode mb-2" data-text="{{ emp.codigo_devolucao }}"></div>
-                                <strong class="text-uppercase font-monospace small bg-light border px-2 py-1 rounded">
-                                    {{ emp.codigo_devolucao }}
-                                </strong>
-                            </div>
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
+                            <!-- Data de Expiração -->
+                            <td class="py-4 text-muted fs-6">
+                                <i class="bi bi-calendar-event me-1 text-secondary"></i> {{ emprestimo.data_expiracao|date:"d/m/Y H:i"|default:"-" }}
+                            </td>
 
-                    <td class="text-center align-middle">
-                        {% if emp.status_geral == 'PENDENTE' %}
-                            <a href="{% url 'cancelar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Tem certeza que deseja cancelar este pedido?')">Cancelar</a>
-                        {% elif emp.status_geral == 'ATIVO' %}
-                            {% if emp.esta_atrasado %}
-                                <span class="text-danger small fw-bold">Bloqueado<br>(Em Atraso)</span>
-                            {% else %}
-                                <a href="{% url 'renovar_emprestimo' emp.id %}" class="btn btn-sm btn-outline-primary w-100" onclick="return confirm('Deseja estender o prazo de devolução?')">Renovar Prazo</a>
-                            {% endif %}
-                        {% else %}
-                            <span class="text-muted">-</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
-                        Você ainda não possui nenhuma solicitação de empréstimo.<br>
-                        <a href="{% url 'catalogo' %}" class="btn btn-sm btn-primary mt-2">Acessar Catálogo</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            <!-- Código de Retirada -->
+                            <td class="py-4 text-center">
+                                <span class="badge bg-light text-dark font-monospace border px-3 py-2 fs-6">{{ emprestimo.codigo_retirada|default:"-" }}</span>
+                            </td>
+
+                            <!-- Ações -->
+                            <td class="py-4 text-center px-4">
+                                {% if emprestimo.status_geral == 'PENDENTE' %}
+                                    <a href="{% url 'cancelar_emprestimo' emprestimo.id %}" class="btn btn-sm btn-outline-danger px-4 py-2 rounded-pill fw-semibold">Cancelar</a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <div class="py-5">
+                                    <i class="bi bi-folder2-open display-4 text-secondary opacity-50 d-block mb-3"></i>
+                                    <h5 class="fw-bold text-dark">Nenhum empréstimo encontrado</h5>
+                                    <p class="mb-3 text-muted">Você ainda não possui nenhum empréstimo ou solicitação registrada no momento.</p>
+                                    <a href="{% url 'catalogo' %}" class="btn btn-submit px-4 py-2 fw-semibold">Ir para o Catálogo</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var qrElements = document.querySelectorAll('.qrcode');
-
-        qrElements.forEach(function(el) {
-            var texto = el.getAttribute('data-text');
-            if (texto) {
-                new QRCode(el, {
-                    text: texto,
-                    width: 100,
-                    height: 100,
-                    colorDark : "#000000",
-                    colorLight : "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
-            }
-        });
-    });
-</script>
 {% endblock %}

@@ -121,12 +121,7 @@ def painel(request):
     # Filtra apenas os empréstimos do usuário logado e ordena do mais recente para o mais antigo
     meus_emprestimos = Emprestimo.objects.filter(usuario=request.user).order_by('-id')
 
-    # Verifica se o usuário é administrador ou solicitante comum
-    perfil_usuario = 'Administrador' if request.user.is_staff else 'Solicitante'
-
     contexto = {
-        'nome': request.user.nome_completo,  # Usa o campo nome_completo que você criou no seu model
-        'perfil': perfil_usuario,
         'emprestimos': meus_emprestimos
     }
 

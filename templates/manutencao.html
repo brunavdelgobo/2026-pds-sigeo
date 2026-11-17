@@ -1,41 +1,50 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="text-danger">Objetos em Manutenção</h2>
-            <p class="lead mb-0">Gerencie os itens avariados e retorne-os ao catálogo após o conserto.</p>
+<div class="container py-4">
+    <!-- Cabeçalho da Página com Título em Degradê -->
+    <div class="row mb-5 align-items-center">
+        <div class="col">
+            <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Objetos em Manutenção
+            </h1>
+            <p class="text-muted fs-5 mb-0">Gerencie os itens avariados e retorne-os ao catálogo após o conserto.</p>
         </div>
     </div>
-    <hr>
 
-    <div class="row">
+    <div class="row g-4">
         {% for obj in objetos %}
             <div class="col-md-4 mb-4">
-                <div class="card h-100 border-danger shadow-sm">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0">{{ obj.nome_objeto }}</h5>
+                <!-- Cartão Moderno e Arredondado -->
+                <div class="card h-100 border-0 shadow-sm rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important;">
+                    <div class="card-header bg-white py-3 px-4 border-bottom border-light">
+                        <h5 class="mb-0 fw-bold text-dark fs-5">
+                            <i class="bi bi-tools me-2 text-danger"></i> {{ obj.nome_objeto }}
+                        </h5>
                     </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                            <strong>Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}<br>
-                            <strong>Categoria:</strong> {{ obj.categoria.nome_categoria }}<br>
-                            <strong>Condição Atual:</strong> <span class="text-danger">{{ obj.get_condicao_display }}</span>
+                    <div class="card-body p-4">
+                        <p class="card-text text-muted mb-3">
+                            <strong class="text-dark">Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}<br>
+                            <strong class="text-dark">Categoria:</strong> {{ obj.categoria.nome_categoria }}<br>
+                            <strong class="text-dark">Condição Atual:</strong> <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">{{ obj.get_condicao_display }}</span>
                         </p>
                     </div>
-                    <div class="card-footer bg-transparent border-top-0">
-                        <!-- O onclick exige uma confirmação antes de disparar o link -->
-                        <a href="{% url 'concluir_manutencao' obj.id %}" class="btn btn-outline-success w-100" onclick="return confirm('Confirmar que o reparo foi concluído? O objeto voltará para o catálogo como Íntegro/Perfeito.');">
-                            Marcar como Consertado
+                    <div class="card-footer bg-white border-top-0 p-4 pt-0">
+                        <!-- Botão com confirmação e estilo arredondado -->
+                        <a href="{% url 'concluir_manutencao' obj.id %}" class="btn btn-outline-success w-100 py-2 rounded-pill fw-semibold" onclick="return confirm('Confirmar que o reparo foi concluído? O objeto voltará para o catálogo como Íntegro/Perfeito.');">
+                            <i class="bi bi-check-circle me-1"></i> Marcar como Consertado
                         </a>
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-success text-center py-4">
-                    <strong>Nenhum objeto em manutenção!</strong> O acervo está 100% operacional.
+                <div class="alert alert-success text-center shadow-sm rounded-4 border-0 py-5 bg-white">
+                    <div class="py-3">
+                        <i class="bi bi-check-circle display-4 text-success opacity-75 d-block mb-3"></i>
+                        <h5 class="fw-bold text-dark">Nenhum objeto em manutenção!</h5>
+                        <p class="text-muted mb-0">O acervo está 100% operacional no momento.</p>
+                    </div>
                 </div>
             </div>
         {% endfor %}
