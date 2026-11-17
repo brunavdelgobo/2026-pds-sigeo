@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="{% static 'sigeo/style.css' %}">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 shadow-sm border-bottom">
+
         <div class="container">
             <a class="navbar-brand" href="/">SIGEO</a>
 
@@ -57,7 +58,7 @@
                             </li>
                         {% endif %}
                         <li class="nav-item">
-                            <a class="nav-link text-light fw-bold text-decoration-underline" href="{% url 'meu_perfil' %}">Olá, {{ user.nome_completo }}</a>
+                            <a class="nav-link fw-bold text-decoration-underline" href="{% url 'meu_perfil' %}">Olá, {{ user.nome_completo }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-danger" href="{% url 'logout' %}">Sair</a>

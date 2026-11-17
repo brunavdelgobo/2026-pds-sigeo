@@ -10,15 +10,16 @@
     width: 880px;
     max-width: 95%;
     height: 560px;
-    background: #1e2124;
-    color: #fff;
+    background: #ffffff !important;
+    color: #1e293b !important;
     border-radius: 24px;
     display: flex;
     overflow: hidden;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* painel que desliza */
+/* Painel que desliza (Gradiente Azul/Roxo) */
 .auth-card::after {
     content: "";
     position: absolute;
@@ -58,6 +59,21 @@
     transition: opacity 0.3s ease, transform 0.4s ease;
 }
 
+/* Textos escuros no lado do formulário branco */
+.form-box h2,
+.form-box h3,
+.form-box p,
+.form-box label {
+    color: #1e293b !important;
+}
+
+/* Textos brancos no painel que desliza (lado roxo) */
+.overlay-box h2,
+.overlay-box h3,
+.overlay-box p {
+    color: #ffffff !important;
+}
+
 .form-box form {
     width: 100%;
     display: flex;
@@ -66,19 +82,39 @@
     margin-top: 12px;
 }
 
+/* Caixas de texto gerais */
 .form-box input {
     width: 100%;
     padding: 10px 14px;
     border-radius: 8px;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
     outline: none;
     font-size: 0.95rem;
 }
 
 .form-box input::placeholder {
-    color: rgba(255, 255, 255, 0.65);
+    color: #94a3b8 !important;
+}
+
+/* Email e Senha (Bootstrap form-control) */
+.form-control {
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    border: 1.5px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+}
+
+/* Mantém o fundo claro mesmo com preenchimento automático do navegador */
+.form-box input:-webkit-autofill,
+.form-box input:-webkit-autofill:hover,
+.form-box input:-webkit-autofill:focus,
+.form-control:-webkit-autofill {
+    -webkit-text-fill-color: #1e293b !important;
+    -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .btn-submit {
@@ -92,10 +128,20 @@
     margin-top: 6px;
     transition: opacity 0.2s, transform 0.2s;
 }
-
 .btn-submit:hover {
     opacity: 0.9;
     transform: translateY(-2px);
+}
+
+/* Botão de entrar */
+.btn-primary {
+    background-color: #2563eb !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 0.75rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+    transition: all 0.2s ease;
 }
 
 .btn-switch {
@@ -112,20 +158,20 @@
 
 .btn-switch:hover {
     background: #fff;
-    color: #1e2124;
+    color: #1e3a8a;
 }
 
 .forgot-link {
-    color: #adb5bd;
+    color: #64748b !important;
     font-size: 0.85rem;
     text-decoration: none;
     align-self: flex-end;
 }
 
 .forgot-link:hover {
-    color: #fff;
+    color: #4f46e5 !important;
+    text-decoration: underline;
 }
-
 
 .auth-card.login-active .go-login,
 .auth-card.login-active .form-cadastro {
@@ -139,24 +185,16 @@
     pointer-events: none;
 }
 
-/* Mantém o fundo escuro mesmo com preenchimento automático do navegador */
-.form-box input:-webkit-autofill,
-.form-box input:-webkit-autofill:hover,
-.form-box input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #fff;
-    -webkit-box-shadow: 0 0 0px 1000px #34373b inset;
-    transition: background-color 5000s ease-in-out 0s;
-}
-
-
+/* Telas únicas (ex: recuperar senha) */
 .auth-card-single {
     width: 460px;
     max-width: 95%;
-    background: #1e2124;
-    color: #fff;
+    background: #ffffff !important;
+    color: #1e293b !important;
     border-radius: 24px;
     padding: 40px 35px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     text-align: center;
 }
 
@@ -164,19 +202,19 @@
 .auth-card-single h3 {
     margin-bottom: 12px;
     font-weight: bold;
+    color: #0f172a !important;
 }
 
 .auth-card-single p {
-    color: #adb5bd;
+    color: #475569 !important;
     font-size: 0.95rem;
     margin-bottom: 20px;
 }
 
-
 .auth-card-single form p {
     text-align: left;
     margin-bottom: 14px;
-    color: #e9ecef;
+    color: #1e293b !important;
 }
 
 .auth-card-single input[type="email"],
@@ -185,25 +223,74 @@
     width: 100%;
     padding: 10px 14px;
     border-radius: 8px;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    border: 1.5px solid #cbd5e1 !important;
+    background: #f8fafc !important;
+    color: #1e293b !important;
     outline: none;
     margin-top: 6px;
 }
 
-
 .auth-card-single ul {
     text-align: left;
     font-size: 0.85rem;
-    color: #adb5bd;
+    color: #64748b;
     padding-left: 18px;
     margin-bottom: 16px;
 }
 
 .auth-card-single .errorlist {
-    color: #ff6b6b;
+    color: #dc2626;
     list-style: none;
     padding-left: 0;
     font-weight: bold;
+}
+
+
+.catalog-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.catalog-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* sobe e desce navegação */
+.navbar-nav .nav-link {
+    transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+.navbar-nav .nav-link:hover {
+    transform: translateY(-2px) !important;
+}
+/* Mantém o efeito de subir e a espessura da fonte sem apagar a cor individual de cada item */
+.navbar-nav .nav-link {
+    font-weight: 500;
+    transition: transform 0.2s ease, color 0.2s ease !important;
+}
+
+/* Quando passar o mouse por cima, QUALQUER um deles sobe e fica roxo/azul */
+.navbar-nav .nav-link:hover {
+    color: #4f46e5 !important;
+    transform: translateY(-2px) !important;
+}
+/* Select moderno com bordas arredondadas e setinha padrão do Bootstrap */
+.form-select {
+    border-radius: 0.75rem !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 0.6rem 2.5rem 0.6rem 1rem !important;
+    font-size: 0.95rem;
+    background-color: #ffffff !important;
+    transition: all 0.2s ease !important;
+}
+
+.form-select:focus {
+    border-color: #4f46e5 !important;
+    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.15) !important;
+    outline: none !important;
+}
+
+.form-select option {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
 }

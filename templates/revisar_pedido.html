@@ -1,75 +1,98 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mt-4">
-    <h2 class="text-primary">Revisar Solicitação</h2>
-    <p class="lead">Confira os itens selecionados antes de confirmar o pedido.</p>
-    <hr>
+<div class="container py-4">
+    <!-- Cabeçalho da Página com Título em Degradê -->
+    <div class="row mb-5 align-items-center">
+        <div class="col">
+            <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Revisar Solicitação
+            </h1>
+            <p class="text-muted fs-5 mb-0">Confira os itens selecionados antes de confirmar o seu pedido no acervo.</p>
+        </div>
+    </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="list-group shadow-sm mb-4">
-                <!-- AGORA O FOR RODA PELO NOSSO PACOTE (item) -->
-                {% for item in itens_carrinho %}
-                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+    <div class="row g-4">
+        <!-- Lista de Itens do Carrinho -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white" style="border-color: rgba(0,0,0,0.06) !important;">
+                <div class="card-header bg-white py-4 px-4 border-bottom border-light">
+                    <h4 class="mb-0 fw-bold text-dark fs-5">
+                        <i class="bi bi-basket me-2 text-primary"></i> Itens no Carrinho
+                    </h4>
+                </div>
 
-                        <div class="d-flex align-items-center gap-3">
-                            <!-- MINIATURA DA FOTO (Se já tiver configurado) -->
-                            {% if item.subcategoria.imagem %}
-                                <img src="{{ item.subcategoria.imagem.url }}" class="rounded shadow-sm" alt="{{ item.subcategoria.nome_subcategoria }}" style="width: 70px; height: 70px; object-fit: cover;">
-                            {% else %}
-                                <div class="bg-light rounded d-flex justify-content-center align-items-center shadow-sm border" style="width: 70px; height: 70px;">
-                                    <i class="bi bi-camera text-muted fs-4"></i>
+                <div class="list-group list-group-flush">
+                    {% for item in itens_carrinho %}
+                        <div class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center p-4 gap-3 border-light">
+
+                            <div class="d-flex align-items-center gap-3">
+                                <!-- MINIATURA DA FOTO -->
+                                {% if item.subcategoria.imagem %}
+                                    <img src="{{ item.subcategoria.imagem.url }}" class="rounded-4 shadow-sm border" alt="{{ item.subcategoria.nome_subcategoria }}" style="width: 75px; height: 75px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light rounded-4 d-flex justify-content-center align-items-center shadow-sm border" style="width: 75px; height: 75px;">
+                                        <i class="bi bi-camera text-muted fs-4"></i>
+                                    </div>
+                                {% endif %}
+
+                                <div>
+                                    <h5 class="mb-1 fw-bold text-dark fs-5">{{ item.subcategoria.nome_subcategoria }}</h5>
+                                    <p class="mb-1 text-muted small">Categoria: <strong>{{ item.subcategoria.categoria.nome_categoria }}</strong></p>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill fw-semibold" style="font-size: 0.8rem;">
+                                        Prazo: {{ item.subcategoria.prazo_valor }} {{ item.subcategoria.get_prazo_unidade_display }}
+                                    </span>
                                 </div>
-                            {% endif %}
-
-                            <div>
-                                <!-- Acessamos o subcat usando item.subcategoria -->
-                                <h5 class="mb-1">{{ item.subcategoria.nome_subcategoria }}</h5>
-                                <small class="text-muted">Categoria: {{ item.subcategoria.categoria.nome_categoria }}</small>
-                                <br>
-                                <!-- PRAZO DINÂMICO -->
-                                <small class="text-info fw-bold">Prazo de empréstimo: {{ item.subcategoria.prazo_valor }} {{ item.subcategoria.get_prazo_unidade_display }}</small>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-center gap-3">
-                            <!-- CONTROLES DE QUANTIDADE (+ E -) -->
-                            <div class="input-group input-group-sm" style="width: 110px;">
-                                <a href="{% url 'diminuir_qtd_pedido' item.subcategoria.id %}" class="btn btn-outline-secondary fw-bold px-3">-</a>
-                                <span class="input-group-text bg-white fw-bold flex-grow-1 justify-content-center">{{ item.quantidade }}</span>
-                                <a href="{% url 'aumentar_qtd_pedido' item.subcategoria.id %}" class="btn btn-outline-secondary fw-bold px-3">+</a>
                             </div>
 
-                            <!-- BOTÃO REMOVER -->
-                            <a href="{% url 'remover_do_pedido' item.subcategoria.id %}" class="btn btn-sm btn-outline-danger">Remover Tudo</a>
+                            <div class="d-flex align-items-center justify-content-between justify-content-md-end gap-3 mt-2 mt-md-0">
+                                <!-- CONTROLES DE QUANTIDADE (+ E -) -->
+                                <div class="input-group input-group-sm rounded-pill overflow-hidden border" style="width: 120px;">
+                                    <a href="{% url 'diminuir_qtd_pedido' item.subcategoria.id %}" class="btn btn-light text-dark fw-bold px-3">-</a>
+                                    <span class="input-group-text bg-white fw-bold flex-grow-1 justify-content-center border-0">{{ item.quantidade }}</span>
+                                    <a href="{% url 'aumentar_qtd_pedido' item.subcategoria.id %}" class="btn btn-light text-dark fw-bold px-3">+</a>
+                                </div>
+
+                                <!-- BOTÃO REMOVER -->
+                                <a href="{% url 'remover_do_pedido' item.subcategoria.id %}" class="btn btn-sm btn-outline-danger px-3 py-2 rounded-pill fw-semibold">Remover</a>
+                            </div>
                         </div>
-                    </div>
-                {% empty %}
-                    <div class="list-group-item text-center py-5">
-                        <p class="text-muted mb-0">Você ainda não selecionou nenhum item.</p>
-                    </div>
-                {% endfor %}
+                    {% empty %}
+                        <div class="text-center py-5">
+                            <div class="py-4">
+                                <i class="bi bi-cart-x display-4 text-secondary opacity-50 d-block mb-3"></i>
+                                <h5 class="fw-bold text-dark">Seu carrinho está vazio</h5>
+                                <p class="text-muted mb-3">Você ainda não selecionou nenhum item para empréstimo.</p>
+                                <a href="{% url 'catalogo' %}" class="btn btn-submit px-4 py-2 rounded-pill fw-semibold">Ir para o Catálogo</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm border-primary">
-                <div class="card-body">
-                    <h5 class="card-title">Resumo</h5>
-                    <!-- AGORA MOSTRA O NÚMERO TOTAL REAL (ex: 5) -->
-                    <p class="card-text">Total de itens no pedido: <strong>{{ total_itens }}</strong></p>
+        <!-- Coluna de Resumo do Pedido -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-2" style="border-color: rgba(0,0,0,0.06) !important;">
+                <div class="card-body p-4">
+                    <h4 class="card-title fw-bold text-dark mb-4 fs-4">Resumo do Pedido</h4>
 
-                    <div class="alert alert-warning small">
-                        Você terá <strong>24 horas</strong> para retirar os itens no balcão após a confirmação.
+                    <div class="d-flex justify-content-between align-items-center mb-3 text-muted">
+                        <span>Total de itens:</span>
+                        <strong class="text-dark fs-5">{{ total_itens }}</strong>
+                    </div>
+
+                    <div class="alert alert-warning border-0 shadow-sm rounded-4 p-3 small mb-4 text-dark" style="background-color: #fffbeb;">
+                        <i class="bi bi-clock-history me-1 text-warning"></i> Você terá <strong>24 horas</strong> para retirar os itens no balcão após a confirmação.
                     </div>
 
                     <form method="POST">
                         {% csrf_token %}
                         {% if total_itens > 0 %}
-                            <button type="submit" class="btn btn-success w-100 btn-lg">Confirmar Solicitação</button>
+                            <!-- Botão padronizado com o degradê do SIGEO -->
+                            <button type="submit" class="btn btn-submit w-100 py-3 rounded-pill fw-semibold shadow-sm">Confirmar Solicitação</button>
                         {% else %}
-                            <a href="{% url 'catalogo' %}" class="btn btn-primary w-100">Voltar ao Catálogo</a>
+                            <a href="{% url 'catalogo' %}" class="btn btn-submit w-100 py-3 rounded-pill fw-semibold">Voltar ao Catálogo</a>
                         {% endif %}
                     </form>
                 </div>

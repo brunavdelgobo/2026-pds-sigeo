@@ -1,105 +1,130 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="text-primary">Gestão de Empréstimos</h2>
-            <p class="lead mb-0">Visão geral de todas as solicitações e do acervo.</p>
-        <div>
-            <a href="{% url 'validar_codigo' %}" class="btn btn-success">Validar um Código</a>
-            <a href="{% url 'relatorio_inventario_pdf' %}" class="btn btn-outline-danger ms-2" target="_blank">📄 Baixar PDF</a>
-            <a href="{% url 'relatorio_inventario_csv' %}" class="btn btn-outline-success ms-2">📊 CSV</a>
+<div class="container py-4">
+    <!-- Cabeçalho da Página com Título em Degradê e Ações Alinhadas -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Gestão de Empréstimos
+            </h1>
+            <p class="text-muted fs-5 mb-0">Visão geral de todas as solicitações e do acervo no sistema.</p>
         </div>
-    <hr>
+        <div class="col-md-6 text-md-end">
+            <div class="d-flex flex-wrap justify-content-md-end gap-2">
+                <a href="{% url 'validar_codigo' %}" class="btn btn-submit px-4 py-2 rounded-pill fw-semibold shadow-sm">
+                    <i class="bi bi-qr-code-scan me-1"></i> Validar um Código
+                </a>
+                <a href="{% url 'relatorio_inventario_pdf' %}" class="btn btn-outline-danger px-3 py-2 rounded-pill fw-semibold" target="_blank">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Baixar PDF
+                </a>
+                <a href="{% url 'relatorio_inventario_csv' %}" class="btn btn-outline-success px-3 py-2 rounded-pill fw-semibold">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> CSV
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <!-- PAINEL DE ESTATÍSTICAS -->
-    <div class="row mb-4 text-center">
-        <div class="col-md-3 mb-2">
-            <div class="card bg-primary text-white shadow-sm h-100">
+    <hr class="text-muted opacity-25 my-4">
+
+    <!-- PAINEL DE ESTATÍSTICAS (Estilo Light Cards Modernos) -->
+    <div class="row g-3 mb-5 text-center">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100" style="border-color: rgba(0,0,0,0.06) !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Acervo Total</h5>
-                    <h2 class="display-6 fw-bold mb-0">{{ total_objetos }}</h2>
+                    <h6 class="text-muted fw-semibold mb-2">Acervo Total</h6>
+                    <h2 class="display-5 fw-bold text-primary mb-0">{{ total_objetos }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-2">
-            <div class="card bg-success text-white shadow-sm h-100">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100" style="border-color: rgba(0,0,0,0.06) !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Disponíveis</h5>
-                    <h2 class="display-6 fw-bold mb-0">{{ disponiveis }}</h2>
+                    <h6 class="text-muted fw-semibold mb-2">Disponíveis</h6>
+                    <h2 class="display-5 fw-bold text-success mb-0">{{ disponiveis }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-2">
-            <div class="card bg-warning text-dark shadow-sm h-100">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100" style="border-color: rgba(0,0,0,0.06) !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Emprestados</h5>
-                    <h2 class="display-6 fw-bold mb-0">{{ emprestados }}</h2>
+                    <h6 class="text-muted fw-semibold mb-2">Emprestados</h6>
+                    <h2 class="display-5 fw-bold text-warning mb-0" style="color: #d97706 !important;">{{ emprestados }}</h2>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-2">
-            <div class="card bg-danger text-white shadow-sm h-100">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100" style="border-color: rgba(0,0,0,0.06) !important;">
                 <div class="card-body">
-                    <h5 class="card-title">Em Manutenção</h5>
-                    <h2 class="display-6 fw-bold mb-0">{{ em_manutencao }}</h2>
+                    <h6 class="text-muted fw-semibold mb-2">Em Manutenção</h6>
+                    <h2 class="display-5 fw-bold text-danger mb-0">{{ em_manutencao }}</h2>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- TABELA DE EMPRÉSTIMOS -->
-    <div class="table-responsive">
-        <table class="table table-striped table-hover shadow-sm bg-white rounded align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID</th>
-                    <th>Solicitante</th>
-                    <th>Status</th>
-                    <th>Expira em</th>
-                    <th>Retirada</th>
-                    <th>Devolução</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for emp in emprestimos %}
-                <tr>
-                    <td>#{{ emp.id }}</td>
-                    <td>
-                        <strong>{{ emp.usuario.nome_completo }}</strong><br>
-                        <small class="text-muted">{{ emp.usuario.email }}</small>
-                    </td>
-                    <td>
-                        {% if emp.status_geral == 'PENDENTE' %}
-                            <span class="badge bg-warning text-dark">{{ emp.status_geral }}</span>
-                        {% elif emp.status_geral == 'ATIVO' %}
-                            {% if emp.esta_atrasado %}
-                                <span class="badge bg-danger">ATRASADO</span>
+    <!-- TABELA DE EMPRÉSTIMOS MODERNA -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important;">
+        <div class="card-header bg-white py-4 px-4 border-bottom border-light">
+            <h4 class="mb-0 fw-bold text-dark fs-5">
+                <i class="bi bi-clock-history me-2 text-primary"></i> Histórico Geral de Solicitações
+            </h4>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase fs-7 text-muted border-bottom">
+                    <tr>
+                        <th class="py-3 px-4">ID</th>
+                        <th class="py-3">Solicitante</th>
+                        <th class="py-3">Status</th>
+                        <th class="py-3">Expira em</th>
+                        <th class="py-3">Retirada</th>
+                        <th class="py-3 px-4">Devolução</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in emprestimos %}
+                    <tr>
+                        <td class="px-4 fw-bold text-secondary">#{{ emp.id }}</td>
+                        <td class="py-3">
+                            <strong class="text-dark">{{ emp.usuario.nome_completo }}</strong><br>
+                            <small class="text-muted">{{ emp.usuario.email }}</small>
+                        </td>
+                        <td class="py-3">
+                            {% if emp.status_geral == 'PENDENTE' %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 rounded-pill fw-semibold">Pendente</span>
+                            {% elif emp.status_geral == 'ATIVO' %}
+                                {% if emp.esta_atrasado %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill fw-semibold">Atrasado</span>
+                                {% else %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Ativo</span>
+                                {% endif %}
+                            {% elif emp.status_geral == 'CONCLUIDO' %}
+                                <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill fw-semibold">Concluído</span>
+                            {% elif emp.status_geral == 'CANCELADO' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill fw-semibold">Cancelado</span>
                             {% else %}
-                                <span class="badge bg-primary">ATIVO</span>
+                                <span class="badge bg-dark bg-opacity-10 text-dark px-3 py-2 rounded-pill fw-semibold">{{ emp.status_geral }}</span>
                             {% endif %}
-                        {% elif emp.status_geral == 'CONCLUIDO' %}
-                            <span class="badge bg-success">{{ emp.status_geral }}</span>
-                        {% elif emp.status_geral == 'CANCELADO' %}
-                            <span class="badge bg-secondary">{{ emp.status_geral }}</span>
-                        {% else %}
-                            <span class="badge bg-dark">{{ emp.status_geral }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
-                    <td class="font-monospace text-uppercase">{{ emp.codigo_retirada|default:"-" }}</td>
-                    <td class="font-monospace text-uppercase">{{ emp.codigo_devolucao|default:"-" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">
-                        Nenhum empréstimo registrado no sistema ainda.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        <td class="py-3 text-muted">{{ emp.data_expiracao|date:"d/m/Y H:i" }}</td>
+                        <td class="py-3 font-monospace text-uppercase text-secondary fw-semibold">{{ emp.codigo_retirada|default:"-" }}</td>
+                        <td class="py-3 px-4 font-monospace text-uppercase text-secondary fw-semibold">{{ emp.codigo_devolucao|default:"-" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <div class="py-3">
+                                <i class="bi bi-inbox display-4 text-secondary opacity-50 d-block mb-3"></i>
+                                <p class="mb-0">Nenhum empréstimo registrado no sistema ainda.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

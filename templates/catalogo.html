@@ -1,25 +1,38 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="mt-4">
-    <h1 class="text-primary">Catálogo de Acervo Disponível</h1>
-    <p class="lead">Escolha um item abaixo para adicionar à sua solicitação:</p>
+<div class="container py-4">
+    <!-- Cabeçalho da Página com Título em Degradê -->
+    <div class="row mb-5 align-items-center">
+        <div class="col">
+            <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Catálogo de Acervo Disponível
+            </h1>
+            <p class="text-muted fs-5 mb-0">Escolha um item abaixo para adicionar à sua solicitação no sistema.</p>
+        </div>
+    </div>
 
     <!-- ALERTA DE BLOQUEIO NO TOPO -->
     {% if usuario_bloqueado %}
-    <div class="alert alert-danger shadow-sm text-center" role="alert">
+    <div class="alert alert-danger shadow-sm text-center border-0 rounded-4 py-3" role="alert">
+        <strong>Atenção!</strong> Você possui materiais com devolução em atraso.
+        Novas solicitações estão <strong>bloqueadas</strong> até a regularização.
+    </div>
+    {% endif %}
+    <!-- ALERTA DE BLOQUEIO NO TOPO -->
+    {% if usuario_bloqueado %}
+    <div class="alert alert-danger shadow-sm text-center border-0 rounded-4" role="alert">
         <strong>Atenção!</strong> Você possui materiais com devolução em atraso.
         Novas solicitações estão <strong>bloqueadas</strong> até a regularização.
     </div>
     {% endif %}
 
-    <!-- Formulário de Busca e Filtro -->
-    <form method="GET" class="row g-3 mb-4 bg-white p-3 shadow-sm rounded">
+    <form method="GET" class="row g-3 mb-4 p-4 shadow-sm rounded-4 border bg-white align-items-center">
         <div class="col-md-6">
-            <input type="text" name="q" class="form-control" placeholder="Buscar por nome da categoria ou item..." value="{{ busca_atual|default:'' }}">
+            <input type="text" name="q" class="form-control rounded-4 py-2 px-3" placeholder="Buscar por nome da categoria ou item..." value="{{ busca_atual|default:'' }}">
         </div>
         <div class="col-md-4">
-            <select name="categoria" class="form-select">
+            <select name="categoria" class="form-select rounded-4 py-2">
                 <option value="">Todas as Categorias</option>
                 {% for cat in categorias %}
                     <option value="{{ cat.id }}" {% if categoria_atual == cat.id|stringformat:"s" %}selected{% endif %}>
@@ -29,67 +42,69 @@
             </select>
         </div>
         <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Buscar</button>
+            <button type="submit" class="btn btn-submit w-100 py-2 rounded-4">Buscar</button>
         </div>
     </form>
+    <hr class="text-muted opacity-25 my-4">
 
-    <hr>
-
+    <!-- GRADE DE EQUIPAMENTOS -->
     <div class="row">
-        <!-- AQUI COMEÇA A MÁGICA DO ESTOQUE AGRUPADO -->
         {% for subcat in subcategorias %}
             <div class="col-md-4 mb-4">
-                <div class="card h-100 shadow-sm border-0 bg-light overflow-hidden">
+                <!-- Cartão Moderno com fundo branco e borda sutil -->
+                <div class="card h-100 shadow-sm border rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important; transition: transform 0.2s ease, box-shadow 0.2s ease;">
 
                     <!-- ÁREA DA IMAGEM DO ITEM -->
                     {% if subcat.imagem %}
                         <img src="{{ subcat.imagem.url }}" class="card-img-top" alt="{{ subcat.nome_subcategoria }}" style="height: 200px; object-fit: cover;">
                     {% else %}
-                        <div class="card-img-top bg-white border-bottom d-flex justify-content-center align-items-center" style="height: 200px;">
+                        <div class="card-img-top bg-light border-bottom d-flex justify-content-center align-items-center" style="height: 200px;">
                             <div class="text-center text-muted">
-                                <i class="bi bi-camera" style="font-size: 3rem;"></i>
+                                <i class="bi bi-camera" style="font-size: 2.5rem;"></i>
                                 <p class="mb-0 small mt-2">Sem foto</p>
                             </div>
                         </div>
                     {% endif %}
                     <!-- FIM DA ÁREA DA IMAGEM -->
 
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title text-dark mb-0 fw-bold">{{ subcat.nome_subcategoria }}</h5>
-                            <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm">
-                                Disponíveis: {{ subcat.qtd_disponivel }}
+                            <h5 class="card-title text-dark mb-0 fw-bold fs-5">{{ subcat.nome_subcategoria }}</h5>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-semibold">
+                                Disp: {{ subcat.qtd_disponivel }}
                             </span>
                         </div>
-                        <h6 class="card-subtitle mb-3 text-secondary">{{ subcat.categoria.nome_categoria }}</h6>
+                        <h6 class="card-subtitle mb-3 text-secondary fs-6">{{ subcat.categoria.nome_categoria }}</h6>
 
-                        <div class="mt-3">
-                            <p class="card-text mb-1 small text-muted">
-                                <i class="bi bi-clock-history me-1"></i> <strong>Prazo de devolução:</strong>
+                        <div class="mt-3 pt-3 border-top border-light">
+                            <p class="card-text mb-2 small text-muted">
+                                <i class="bi bi-clock-history me-1 text-primary"></i> <strong>Prazo:</strong>
                                 {{ subcat.prazo_valor }} {{ subcat.get_prazo_unidade_display }}
                             </p>
-                            <p class="card-text small text-muted">
-                                <i class="bi bi-info-circle me-1"></i> <strong>Limite por pedido:</strong>
-                                {{ subcat.limite_max_itens }} item(ns)
+                            <p class="card-text small text-muted mb-0">
+                                <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Limite:</strong>
+                                {{ subcat.limite_max_itens }} item(ns) por pedido
                             </p>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-top-0 pt-0 pb-3">
+
+                    <div class="card-footer bg-white border-top-0 p-4 pt-0">
                         {% if not usuario_bloqueado %}
                             <form method="POST" action="{% url 'adicionar_ao_pedido' subcat.id %}" class="d-flex gap-2">
                                 {% csrf_token %}
-                                <input type="number" name="quantidade" class="form-control" value="1" min="1" max="{{ subcat.qtd_disponivel }}" style="width: 80px;">
-                                <button type="submit" class="btn btn-outline-primary w-100 fw-bold">Adicionar</button>
+                                <input type="number" name="quantidade" class="form-control text-center fw-bold" value="1" min="1" max="{{ subcat.qtd_disponivel }}" style="width: 75px;">
+                                <!-- Botão com o degradê roxo/azul padrão -->
+                                <button type="submit" class="btn btn-submit w-100 m-0 py-2">Adicionar</button>
                             </form>
                         {% else %}
-                            <button class="btn btn-secondary w-100" disabled>Bloqueado (Em atraso)</button>
+                            <button class="btn btn-secondary w-100 py-2 rounded-3" disabled>Bloqueado (Em atraso)</button>
                         {% endif %}
                     </div>
                 </div>
             </div>
         {% empty %}
             <div class="col-12">
-                <div class="alert alert-warning text-center shadow-sm">Nenhum item disponível com estes filtros no momento.</div>
+                <div class="alert alert-warning text-center shadow-sm rounded-4 border-0 py-4">Nenhum item disponível com estes filtros no momento.</div>
             </div>
         {% endfor %}
     </div>
