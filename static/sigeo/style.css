@@ -255,25 +255,21 @@
     box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* sobe e desce navegação */
-.navbar-nav .nav-link {
-    transition: transform 0.2s ease, color 0.2s ease !important;
-}
-
-.navbar-nav .nav-link:hover {
-    transform: translateY(-2px) !important;
-}
-/* Mantém o efeito de subir e a espessura da fonte sem apagar a cor individual de cada item */
+/* Efeito de movimento e transição forçada para a barra de navegação */
 .navbar-nav .nav-link {
     font-weight: 500;
-    transition: transform 0.2s ease, color 0.2s ease !important;
+    transition: all 0.2s ease-in-out !important;
 }
 
-/* Quando passar o mouse por cima, QUALQUER um deles sobe e fica roxo/azul */
-.navbar-nav .nav-link:hover {
+/* Força o pulinho e a cor roxa em QUALQUER link da navbar no hover */
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.text-danger:hover,
+.navbar-nav .nav-link.text-warning:hover,
+.navbar-nav .nav-link.text-info:hover {
     color: #4f46e5 !important;
-    transform: translateY(-2px) !important;
+    transform: translateY(-3px) !important;
 }
+
 /* Select moderno com bordas arredondadas e setinha padrão do Bootstrap */
 .form-select {
     border-radius: 0.75rem !important;
