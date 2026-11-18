@@ -1,70 +1,80 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-dark text-white">
-                <h4 class="mb-0">Meu Perfil</h4>
-            </div>
-            <div class="card-body">
-                
-                {% if mensagem %}
-                <div class="alert alert-{{ cor_mensagem }} alert-dismissible fade show" role="alert">
-                    {{ mensagem }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <!-- Cartão Moderno e Arredondado -->
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important;">
+
+                <!-- Cabeçalho do Card (Com título maior, em degradê e espaçamento reduzido) -->
+                <div class="card-header bg-white pt-4 px-4 pb-2 border-bottom-0">
+                    <h1 class="fw-bold display-6 mb-1" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        Meu Perfil
+                    </h1>
+                    <p class="text-muted fs-6 mb-0">Visualize suas informações institucionais e atualize seus dados de contato.</p>
                 </div>
-                {% endif %}
 
-                <form method="POST">
-                    {% csrf_token %}
-                    
-                    <!-- Dados Fixos (Somente Leitura) -->
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-muted">Nome Completo</label>
-                        <input type="text" class="form-control bg-light" value="{{ user.nome_completo }}" disabled>
+                <div class="card-body px-4 pb-4 pt-2">
+
+                    {% if mensagem %}
+                    <div class="alert alert-{{ cor_mensagem }} alert-dismissible fade show rounded-4 shadow-sm mb-3" role="alert">
+                        {{ mensagem }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted">E-mail</label>
-                            <input type="email" class="form-control bg-light" value="{{ user.email }}" disabled>
+                    {% endif %}
+
+                    <form method="POST">
+                        {% csrf_token %}
+
+                        <!-- Dados Fixos (Somente Leitura) -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Nome Completo</label>
+                            <input type="text" class="form-control bg-light text-dark rounded-3" value="{{ user.nome_completo }}" disabled>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold text-muted">RA / SIAPE</label>
-                            <input type="text" class="form-control bg-light" value="{{ user.matricula }}" disabled>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label fw-semibold text-secondary small">E-mail</label>
+                                <input type="email" class="form-control bg-light text-dark rounded-3" value="{{ user.email }}" disabled>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">RA / SIAPE</label>
+                                <input type="text" class="form-control bg-light text-dark rounded-3" value="{{ user.matricula }}" disabled>
+                            </div>
                         </div>
-                    </div>
 
-                    <hr class="my-4">
-                    <h5 class="mb-3 text-primary">Dados Editáveis</h5>
+                        <hr class="text-muted opacity-25 my-3">
+                        <h5 class="mb-3 fw-bold text-dark fs-6">Dados Editáveis</h5>
 
-                    <!-- Dados Editáveis -->
-                    <div class="mb-3">
-                        <label for="telefone" class="form-label fw-bold">Telefone de Contato</label>
-                        <input type="text" name="telefone" id="telefone" class="form-control border-primary" value="{{ user.telefone }}" required>
-                    </div>
-
-                    <div class="alert alert-warning small py-2">
-                        Deixe os campos de senha <strong>em branco</strong> se não quiser alterá-la.
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="senha" class="form-label fw-bold">Nova Senha</label>
-                            <input type="password" name="senha" id="senha" class="form-control">
+                        <!-- Dados Editáveis -->
+                        <div class="mb-3">
+                            <label for="telefone" class="form-label fw-semibold text-dark">Telefone de Contato</label>
+                            <input type="text" name="telefone" id="telefone" class="form-control rounded-3" value="{{ user.telefone|default:'' }}" placeholder="(00) 00000-0000" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="confirmar_senha" class="form-label fw-bold">Confirmar Nova Senha</label>
-                            <input type="password" name="confirmar_senha" id="confirmar_senha" class="form-control">
+
+                        <div class="alert alert-warning border-0 shadow-sm rounded-3 p-3 small mb-3 text-dark" style="background-color: #fffbeb;">
+                            <i class="bi bi-info-circle me-1 text-warning"></i> Deixe os campos de senha <strong>em branco</strong> se não quiser alterá-la.
                         </div>
-                    </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-lg">Salvar Alterações</button>
-                    </div>
-                </form>
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label for="senha" class="form-label fw-semibold text-dark">Nova Senha</label>
+                                <input type="password" name="senha" id="senha" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••••">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmar_senha" class="form-label fw-semibold text-dark">Confirmar Nova Senha</label>
+                                <input type="password" name="confirmar_senha" id="confirmar_senha" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••••">
+                            </div>
+                        </div>
 
+                        <div class="d-grid mt-4">
+                            <!-- Botão padronizado com o degradê do SIGEO -->
+                            <button type="submit" class="btn btn-submit py-3 rounded-pill fw-semibold shadow-sm">Salvar Alterações</button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
         </div>
     </div>
