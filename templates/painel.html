@@ -2,77 +2,137 @@
 
 {% block content %}
 <div class="container py-4">
-    <!-- Cabeçalho da Página com Título e Perfil Alinhados -->
     <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <!-- Título principal com cor de destaque e maior -->
             <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                 Meus Empréstimos
             </h1>
-            <p class="text-muted fs-5 mb-0">Acompanhe o status e o histórico das suas solicitações no acervo, <strong>{{ user.nome_completo }}</strong>.</p>
+            <p class="text-muted fs-5 mb-0">Acompanhe o status, os códigos e os QR Codes das suas solicitações, <strong>{{ user.nome_completo }}</strong>.</p>
         </div>
         <div>
-            <span class="badge bg-primary bg-opacity-10 text-primary px-4 py-2 rounded-pill fw-semibold fs-5 shadow-sm">
-                Perfil: {% if user.is_staff %}Administrador{% else %}Solicitante{% endif %}
+            <span class="badge bg-primary bg-opacity-10 text-primary px-4 py-2 rounded-pill fw-semibold fs-6 shadow-sm">
+                Perfil: {{ user.get_perfil_display }}
             </span>
         </div>
     </div>
 
-    <!-- TABELA DE EMPRÉSTIMOS MODERNA E AMPLIADA -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white" style="border-color: rgba(0,0,0,0.06) !important;">
         <div class="card-header bg-white py-4 px-4 border-bottom border-light">
-            <!-- Título da Tabela maior -->
             <h4 class="mb-0 fw-bold text-dark fs-4">
                 <i class="bi bi-clock-history me-2 text-primary"></i> Histórico de Solicitações
             </h4>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0 py-3">
-                <thead class="table-light text-uppercase text-secondary" style="font-size: 0.85rem; letter-spacing: 0.8px;">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase text-secondary" style="font-size: 0.82rem; letter-spacing: 0.8px;">
                     <tr>
-                        <!-- Colunas maiores e com cores personalizadas -->
                         <th class="py-3 px-4 fw-bold text-primary">Status</th>
-                        <th class="py-3 fw-bold text-dark">Pedido ID</th>
-                        <th class="py-3 fw-bold text-secondary">Data de Expiração</th>
-                        <th class="py-3 text-center fw-bold text-info">Código (Retirada)</th>
+                        <th class="py-3 fw-bold text-dark">Pedido e Itens</th>
+                        <th class="py-3 fw-bold text-secondary">Prazo / Expiração</th>
+                        <th class="py-3 text-center fw-bold text-info">Código e QR Code</th>
                         <th class="py-3 text-center px-4 fw-bold text-danger">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for emprestimo in emprestimos %}
                         <tr>
-                            <!-- Coluna de Status com Etiqueta Suave -->
+                            <!-- Status -->
                             <td class="py-4 px-4">
-                                <span class="badge rounded-pill px-3 py-2 fw-semibold fs-6
-                                    {% if emprestimo.status_geral == 'CONCLUIDO' %} bg-success bg-opacity-10 text-success
-                                    {% elif emprestimo.status_geral == 'ATIVO' %} bg-primary bg-opacity-10 text-primary
-                                    {% elif emprestimo.status_geral == 'PENDENTE' %} bg-warning bg-opacity-10 text-warning text-dark
-                                    {% elif emprestimo.status_geral == 'ATRASADO' or emprestimo.status_geral == 'EXPIRADO' %} bg-danger bg-opacity-10 text-danger
-                                    {% else %} bg-secondary bg-opacity-10 text-secondary {% endif %}">
-                                    {{ emprestimo.get_status_geral_display|default:emprestimo.status_geral }}
-                                </span>
+                                {% if emprestimo.esta_atrasado %}
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold bg-danger bg-opacity-10 text-danger">
+                                        Em Atraso
+                                    </span>
+                                {% else %}
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold
+                                        {% if emprestimo.status_geral == 'CONCLUIDO' %} bg-success bg-opacity-10 text-success
+                                        {% elif emprestimo.status_geral == 'ATIVO' %} bg-primary bg-opacity-10 text-primary
+                                        {% elif emprestimo.status_geral == 'PENDENTE' %} bg-warning bg-opacity-10 text-dark
+                                        {% elif emprestimo.status_geral == 'EXPIRADO' %} bg-danger bg-opacity-10 text-danger
+                                        {% else %} bg-secondary bg-opacity-10 text-secondary {% endif %}">
+                                        {{ emprestimo.get_status_geral_display }}
+                                    </span>
+                                {% endif %}
                             </td>
 
-                            <!-- ID do Pedido -->
+                            <!-- Pedido e Itens -->
                             <td class="py-4">
-                                <span class="fw-bold text-dark fs-6">#Pedido {{ emprestimo.id }}</span>
+                                <span class="fw-bold text-dark d-block mb-1">#Pedido {{ emprestimo.id }}</span>
+                                <ul class="list-unstyled mb-0 small text-muted">
+                                    {% for item in emprestimo.itens.all %}
+                                        <li>
+                                            - {{ item.objeto.nome_objeto }}
+                                            {% if item.objeto.cg_patrimonio %}(Pat: {{ item.objeto.cg_patrimonio }}){% endif %}
+                                            {% if item.status_item == 'DEVOLVIDO' %}
+                                                <span class="badge bg-success bg-opacity-10 text-success ms-1">Devolvido</span>
+                                            {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
                             </td>
 
                             <!-- Data de Expiração -->
-                            <td class="py-4 text-muted fs-6">
-                                <i class="bi bi-calendar-event me-1 text-secondary"></i> {{ emprestimo.data_expiracao|date:"d/m/Y H:i"|default:"-" }}
+                            <td class="py-4 text-muted small">
+                                <i class="bi bi-calendar-event me-1 text-secondary"></i>
+                                {% if emprestimo.status_geral == 'PENDENTE' %}
+                                    <span class="d-block text-secondary">Retirar até:</span>
+                                {% elif emprestimo.status_geral == 'ATIVO' %}
+                                    <span class="d-block text-secondary">Devolver até:</span>
+                                {% endif %}
+                                <strong class="text-dark">{{ emprestimo.data_expiracao|date:"d/m/Y H:i"|default:"-" }}</strong>
                             </td>
 
-                            <!-- Código de Retirada -->
+                            <!-- Código Dinâmico (Retirada ou Devolução) + Copiar + QR Code -->
                             <td class="py-4 text-center">
-                                <span class="badge bg-light text-dark font-monospace border px-3 py-2 fs-6">{{ emprestimo.codigo_retirada|default:"-" }}</span>
+                                {% if emprestimo.status_geral == 'PENDENTE' %}
+                                    <small class="d-block text-warning fw-bold mb-1">RETIRADA</small>
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <div class="d-inline-flex align-items-center bg-light border rounded-pill px-3 py-1 gap-2">
+                                            <span class="fw-bold text-dark font-monospace fs-6">{{ emprestimo.codigo_retirada }}</span>
+                                            <button type="button" class="btn btn-sm p-0 text-secondary border-0"
+                                                    onclick="copiarCodigo('{{ emprestimo.codigo_retirada }}', this)"
+                                                    title="Copiar código de retirada">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3"
+                                                onclick="abrirQrCode('{{ emprestimo.codigo_retirada }}', 'Código de Retirada - Pedido #{{ emprestimo.id }}')">
+                                            <i class="bi bi-qr-code"></i> QR
+                                        </button>
+                                    </div>
+                                {% elif emprestimo.status_geral == 'ATIVO' %}
+                                    <small class="d-block text-primary fw-bold mb-1">DEVOLUÇÃO</small>
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <div class="d-inline-flex align-items-center bg-primary bg-opacity-10 border border-primary rounded-pill px-3 py-1 gap-2">
+                                            <span class="fw-bold text-primary font-monospace fs-6">{{ emprestimo.codigo_devolucao }}</span>
+                                            <button type="button" class="btn btn-sm p-0 text-primary border-0"
+                                                    onclick="copiarCodigo('{{ emprestimo.codigo_devolucao }}', this)"
+                                                    title="Copiar código de devolução">
+                                                <i class="bi bi-clipboard"></i>
+                                            </button>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3"
+                                                onclick="abrirQrCode('{{ emprestimo.codigo_devolucao }}', 'Código de Devolução - Pedido #{{ emprestimo.id }}')">
+                                            <i class="bi bi-qr-code"></i> QR
+                                        </button>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted small">Finalizado</span>
+                                {% endif %}
                             </td>
 
                             <!-- Ações -->
                             <td class="py-4 text-center px-4">
                                 {% if emprestimo.status_geral == 'PENDENTE' %}
-                                    <a href="{% url 'cancelar_emprestimo' emprestimo.id %}" class="btn btn-sm btn-outline-danger px-4 py-2 rounded-pill fw-semibold">Cancelar</a>
+                                    <a href="{% url 'cancelar_emprestimo' emprestimo.id %}" class="btn btn-sm btn-outline-danger px-3 py-2 rounded-pill fw-semibold"
+                                       onclick="return confirm('Deseja realmente cancelar esta solicitação?');">
+                                        Cancelar
+                                    </a>
+                                {% elif emprestimo.status_geral == 'ATIVO' and not emprestimo.esta_atrasado %}
+                                    <a href="{% url 'renovar_emprestimo' emprestimo.id %}" class="btn btn-sm btn-outline-primary px-3 py-2 rounded-pill fw-semibold"
+                                       onclick="return confirm('Deseja renovar o prazo deste empréstimo?');">
+                                        <i class="bi bi-arrow-repeat me-1"></i> Renovar
+                                    </a>
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
@@ -95,4 +155,53 @@
         </div>
     </div>
 </div>
+
+<!-- Modal para exibir o QR Code -->
+<div class="modal fade" id="modalQrCode" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <div class="modal-header border-bottom-0 pb-0">
+                <h6 class="modal-title fw-bold text-dark" id="modalQrTitulo">QR Code</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <div id="qrcode-container" class="d-flex justify-content-center mb-3"></div>
+                <p class="font-monospace fw-bold fs-4 text-primary mb-1" id="modalQrTexto"></p>
+                <small class="text-muted">Apresente este código no balcão da secretaria.</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    function copiarCodigo(texto, botao) {
+        navigator.clipboard.writeText(texto).then(() => {
+            const iconeOriginal = botao.innerHTML;
+            botao.innerHTML = '<i class="bi bi-check2-circle text-success"></i>';
+            setTimeout(() => {
+                botao.innerHTML = iconeOriginal;
+            }, 2000);
+        });
+    }
+
+    function abrirQrCode(codigo, titulo) {
+        document.getElementById('modalQrTitulo').innerText = titulo;
+        document.getElementById('modalQrTexto').innerText = codigo;
+        const container = document.getElementById('qrcode-container');
+        container.innerHTML = '';
+
+        new QRCode(container, {
+            text: codigo,
+            width: 200,
+            height: 200,
+            colorDark: "#1e293b",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById('modalQrCode'));
+        modal.show();
+    }
+</script>
 {% endblock %}

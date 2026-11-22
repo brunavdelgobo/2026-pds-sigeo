@@ -12,6 +12,7 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path("inicio/", views.inicio, name="inicio"),
     path("admin/", admin.site.urls),
     path("", views.login_view, name="login"),
     path("login/", views.login_view, name="login"),

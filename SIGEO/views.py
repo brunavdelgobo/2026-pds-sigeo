@@ -69,50 +69,64 @@ def registrar(request):
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            # Pausa o salvamento para aplicar as regras de segurança
             novo_usuario = form.save(commit=False)
-
-            # Força o perfil padrão e blinda contra elevação de privilégio
             novo_usuario.perfil = 'SOLICITANTE'
             novo_usuario.is_staff = False
-
-            # Criptografa a senha corretamente para o login funcionar
             novo_usuario.set_password(form.cleaned_data['senha'])
-
-            # Grava no banco de dados
             novo_usuario.save()
 
+            messages.success(request, "Cadastro concluído com sucesso! Realize o login para continuar.")
             return redirect('login')
+        else:
+            messages.error(request, "Não foi possível concluir o cadastro. Verifique se o e-mail ou matrícula já estão em uso.")
     else:
         form = UsuarioForm()
 
     return render(request, 'registrar.html', {'form': form})
 
-
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('painel')
+        return redirect('inicio')
     erro = None
     if request.method == "POST":
         email = request.POST.get("email")
         senha = request.POST.get("senha")
 
-        # O Django compara a senha digitada com o hash salvo no banco automaticamente
         usuario = authenticate(request, username=email, password=senha)
 
         if usuario is not None:
-            login(request, usuario)  # Cria a sessão segura nativa
-            return redirect("painel")
+            login(request, usuario)
+            return redirect("inicio")
         else:
             erro = "Email ou senha incorretos."
 
     return render(request, "login.html", {"erro": erro})
 
-
 def logout_view(request):
     logout(request)  # Destrói a sessão nativa com segurança
     return redirect("login")
 
+@login_required(login_url='/login/')
+def inicio(request):
+    limpar_emprestimos_expirados()
+
+    total_disponiveis = Objeto.objects.filter(status='DISPONIVEL').count()
+    meus_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO').count()
+    meus_concluidos = Emprestimo.objects.filter(usuario=request.user, status_geral='CONCLUIDO').count()
+
+    # Busca o empréstimo ativo ou pendente mais recente para o card lateral de destaque
+    emprestimo_destaque = Emprestimo.objects.filter(
+        usuario=request.user,
+        status_geral__in=['ATIVO', 'PENDENTE']
+    ).order_by('-id').first()
+
+    contexto = {
+        'total_disponiveis': total_disponiveis,
+        'meus_ativos': meus_ativos,
+        'meus_concluidos': meus_concluidos,
+        'emprestimo_destaque': emprestimo_destaque,
+    }
+    return render(request, 'inicio.html', contexto)
 
 # Este decorador atende ao seu RNF02 (Controle de Acesso no backend)
 @login_required(login_url='/login/')
@@ -538,18 +552,20 @@ def meu_perfil(request):
         telefone = request.POST.get('telefone')
         senha = request.POST.get('senha')
         confirmar_senha = request.POST.get('confirmar_senha')
+        foto = request.FILES.get('foto_perfil')
 
         usuario = request.user
 
-        # 1. Atualiza o telefone
+        # 1. Atualiza o telefone e a foto (se enviada)
         usuario.telefone = telefone
+        if foto:
+            usuario.foto_perfil = foto
 
-        # 2. Verifica se o aluno preencheu algo na senha
+        # 2. Verifica se o usuário preencheu algo na senha
         if senha or confirmar_senha:
             if senha == confirmar_senha:
                 usuario.set_password(senha)
                 usuario.save()
-                # Mantém o aluno logado após mudar a senha
                 update_session_auth_hash(request, usuario)
 
                 mensagem = "Perfil e senha atualizados com sucesso!"
@@ -558,16 +574,14 @@ def meu_perfil(request):
                 mensagem = "As senhas não coincidem. Tente novamente."
                 cor_mensagem = "danger"
         else:
-            # Se não mexeu na senha, só salva o telefone
             usuario.save()
-            mensagem = "Telefone atualizado com sucesso!"
+            mensagem = "Perfil atualizado com sucesso!"
             cor_mensagem = "success"
 
     return render(request, 'meu_perfil.html', {
         'mensagem': mensagem,
         'cor_mensagem': cor_mensagem
     })
-
 
 @login_required(login_url='/login/')
 def relatorio_inventario_pdf(request):
