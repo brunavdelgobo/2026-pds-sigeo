@@ -1,0 +1,6 @@
+.env
+*.pyc
+*.pyc
+/SIGEO/__pycache__
+/SIGEO/__pycache__
+*.pyc
