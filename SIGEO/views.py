@@ -189,7 +189,11 @@ def solicitar_emprestimo(request, objeto_id):
     )
 
     # Cria o Item do Empréstimo vinculando o objeto
-    prazo_devolucao = timezone.now() + timedelta(days=objeto.categoria.prazo_dias)
+    subcat = objeto.subcategoria
+    if subcat.prazo_unidade == 'HORAS':
+        prazo_devolucao = timezone.now() + timedelta(hours=subcat.prazo_valor)
+    else:
+        prazo_devolucao = timezone.now() + timedelta(days=subcat.prazo_valor)
     ItemEmprestimo.objects.create(
         emprestimo=emprestimo,
         objeto=objeto,
