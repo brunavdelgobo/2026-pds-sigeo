@@ -31,6 +31,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     matricula = models.CharField(max_length=20, unique=True)
     telefone = models.CharField(max_length=20)
     perfil = models.CharField(max_length=15, choices=PERFIS, default='SOLICITANTE')
+    foto_perfil = models.ImageField(upload_to='perfis/', null=True, blank=True)
 
     # Campos de controle nativos do Django
     is_active = models.BooleanField(default=True)
@@ -97,6 +98,7 @@ class Objeto(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_OBJETO, default='DISPONIVEL')
     condicao = models.CharField(max_length=15, choices=CONDICAO_FISICA, default='INTEGRO')
     descricao = models.TextField(blank=True, null=True)
+    data_cadastro = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.nome_objeto} ({self.cg_patrimonio})"
@@ -119,6 +121,8 @@ class Emprestimo(models.Model):
     codigo_retirada = models.CharField(max_length=10, unique=True, null=True, blank=True)
     codigo_devolucao = models.CharField(max_length=10, unique=True, null=True, blank=True)
     status_geral = models.CharField(max_length=15, choices=STATUS_GERAL, default='PENDENTE')
+    aviso_vencimento_enviado = models.BooleanField(default=False)
+    aviso_atraso_enviado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Empréstimo #{self.id} - {self.usuario.nome_completo}"
