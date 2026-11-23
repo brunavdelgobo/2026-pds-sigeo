@@ -7,12 +7,12 @@
             <!-- Cartão Moderno e Arredondado -->
             <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important;">
 
-                <!-- Cabeçalho do Card (Com título maior, em degradê e espaçamento reduzido) -->
+                <!-- Cabeçalho do Card -->
                 <div class="card-header bg-white pt-4 px-4 pb-2 border-bottom-0">
                     <h1 class="fw-bold display-6 mb-1" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                         Meu Perfil
                     </h1>
-                    <p class="text-muted fs-6 mb-0">Visualize suas informações institucionais e atualize seus dados de contato.</p>
+                    <p class="text-muted fs-6 mb-0">Visualize suas informações institucionais e atualize sua foto e dados de contato.</p>
                 </div>
 
                 <div class="card-body px-4 pb-4 pt-2">
@@ -24,8 +24,33 @@
                     </div>
                     {% endif %}
 
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+
+                        <!-- Bloco da Foto de Perfil -->
+                        <div class="d-flex align-items-center gap-3 p-3 bg-light rounded-4 mb-4 border">
+                            <div id="preview-container">
+                                {% if user.foto_perfil %}
+                                    <img id="foto-preview" src="{{ user.foto_perfil.url }}" alt="Foto de {{ user.nome_completo }}"
+                                         class="rounded-circle object-fit-cover border shadow-sm"
+                                         style="width: 76px; height: 76px;">
+                                {% else %}
+                                    <div id="avatar-inicial" class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-sm"
+                                         style="width: 76px; height: 76px; font-size: 1.8rem; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                                        {{ user.nome_completo|default:user.email|slice:":1"|upper }}
+                                    </div>
+                                    <img id="foto-preview" src="" alt="Pré-visualização"
+                                         class="rounded-circle object-fit-cover border shadow-sm d-none"
+                                         style="width: 76px; height: 76px;">
+                                {% endif %}
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <label for="foto_perfil" class="form-label fw-bold text-dark mb-1">Foto de Perfil</label>
+                                <input type="file" name="foto_perfil" id="foto_perfil" class="form-control form-control-sm rounded-3" accept="image/*" onchange="mostrarPreviewFoto(this)">
+                                <small class="text-muted d-block mt-1">Formatos aceitos: JPG, PNG ou WEBP.</small>
+                            </div>
+                        </div>
 
                         <!-- Dados Fixos (Somente Leitura) -->
                         <div class="mb-3">
@@ -69,7 +94,6 @@
                         </div>
 
                         <div class="d-grid mt-4">
-                            <!-- Botão padronizado com o degradê do SIGEO -->
                             <button type="submit" class="btn btn-submit py-3 rounded-pill fw-semibold shadow-sm">Salvar Alterações</button>
                         </div>
                     </form>
@@ -79,4 +103,22 @@
         </div>
     </div>
 </div>
+
+<script>
+    function mostrarPreviewFoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('foto-preview');
+                const avatarInicial = document.getElementById('avatar-inicial');
+                imgPreview.src = e.target.result;
+                imgPreview.classList.remove('d-none');
+                if (avatarInicial) {
+                    avatarInicial.classList.add('d-none');
+                }
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
 {% endblock %}

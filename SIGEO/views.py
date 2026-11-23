@@ -1,22 +1,39 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
-from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria, Subcategoria
+from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria, Subcategoria, Usuario, ParametrosSistema
 import uuid
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Q, Count
 import random
 import string
-from django.contrib.auth import update_session_auth_hash
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import csv
+import json
 from django.core.mail import send_mail
 from collections import Counter
 from django.contrib import messages
+from .notificacoes import (
+    notificar_solicitacao_criada,
+    notificar_retirada_confirmada,
+    notificar_devolucao_confirmada,
+    notificar_lembrete_vencimento,
+    notificar_atraso,
+    notificar_suspensao,
+    notificar_cancelamento,
+)
+
+
+def is_atendente_ou_admin(user):
+    return user.is_authenticated and (user.perfil in ['ADMIN', 'ATENDENTE'] or user.is_superuser)
+
+
+def is_admin(user):
+    return user.is_authenticated and (user.perfil == 'ADMIN' or user.is_superuser)
 
 
 def limpar_emprestimos_expirados():
@@ -24,20 +41,16 @@ def limpar_emprestimos_expirados():
     Função invisível que varre o banco e expira os pedidos não retirados.
     Ela procura tudo que está 'PENDENTE' mas que a data de expiração já ficou no passado.
     """
-    # Filtra os pedidos não retirados que venceram
     pedidos_vencidos = Emprestimo.objects.filter(
         status_geral='PENDENTE',
         data_expiracao__lt=timezone.now()
     )
 
     for emp in pedidos_vencidos:
-        # Muda o status do pedido para EXPIRADO
         emp.status_geral = 'EXPIRADO'
         emp.save()
 
-        # Devolve os objetos para a prateleira (catálogo)
         for item in emp.itens.all():
-            # Aqui podemos usar o mesmo status de cancelado para o item
             item.status_item = 'CANCELADO'
             item.save()
 
@@ -45,44 +58,65 @@ def limpar_emprestimos_expirados():
                 item.objeto.status = 'DISPONIVEL'
                 item.objeto.save()
 
-        # 2. Identifica empréstimos ATIVOS que estão em ATRASO
-        # Buscamos todos os ativos e usamos o método esta_atrasado() que você já tem no model
-        emprestimos_ativos = Emprestimo.objects.filter(status_geral='ATIVO')
+    emprestimos_ativos = Emprestimo.objects.filter(status_geral='ATIVO')
+    for emp in emprestimos_ativos:
+        if emp.esta_atrasado():
+            data_local = timezone.localtime(emp.data_expiracao)
+            data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
 
-        for emp in emprestimos_ativos:
-            if emp.esta_atrasado():
-                # Aqui você pode disparar o e-mail de aviso de atraso
-                data_local = timezone.localtime(emp.data_expiracao)
-                data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
+            assunto = f"SIGEO - AVISO DE ATRASO (Pedido #{emp.id})"
+            mensagem = (
+                f"Olá, {emp.usuario.nome_completo}!\n\n"
+                f"Constatamos que o seu empréstimo (Pedido #{emp.id}) está com a devolução em ATRASO.\n"
+                f"O prazo limite era {data_formatada}.\n\n"
+                f"Por favor, realize a devolução dos itens o mais rápido possível "
+                f"para evitar bloqueios no seu cadastro.\n\n"
+                f"Atenciosamente,\nEquipe SIGEO - IFPR"
+            )
 
-                assunto = f"SIGEO - AVISO DE ATRASO (Pedido #{emp.id})"
-                mensagem = (
-                    f"Olá, {emp.usuario.nome_completo}!\n\n"
-                    f"Constatamos que o seu empréstimo (Pedido #{emp.id}) está com a devolução em ATRASO.\n"
-                    f"O prazo limite era {data_formatada}.\n\n"
-                    f"Por favor, realize a devolução dos itens o mais rápido possível "
-                    f"para evitar bloqueios no seu cadastro.\n\n"
-                    f"Atenciosamente,\nEquipe SIGEO - IFPR"
-                )
+def verificar_notificacoes_pendentes():
+    agora = timezone.now()
+    limite_aviso = agora + timedelta(hours=2)
+
+    # 1. Lembrete de vencimento próximo (faltando até 2h)
+    proximos = Emprestimo.objects.filter(
+        status_geral='ATIVO',
+        data_expiracao__gt=agora,
+        data_expiracao__lte=limite_aviso,
+        aviso_vencimento_enviado=False
+    ).select_related('usuario')
+
+    for emp in proximos:
+        notificar_lembrete_vencimento(emp)
+        emp.aviso_vencimento_enviado = True
+        emp.save(update_fields=['aviso_vencimento_enviado'])
+
+    # 2. Aviso de atraso efetivo
+    atrasados = Emprestimo.objects.filter(
+        status_geral='ATIVO',
+        data_expiracao__lt=agora,
+        aviso_atraso_enviado=False
+    ).select_related('usuario')
+
+    for emp in atrasados:
+        notificar_atraso(emp)
+        emp.aviso_atraso_enviado = True
+        emp.save(update_fields=['aviso_atraso_enviado'])
 
 def registrar(request):
     if request.method == 'POST':
         form = UsuarioForm(request.POST)
         if form.is_valid():
-            # Pausa o salvamento para aplicar as regras de segurança
             novo_usuario = form.save(commit=False)
-
-            # Força o perfil padrão e blinda contra elevação de privilégio
             novo_usuario.perfil = 'SOLICITANTE'
             novo_usuario.is_staff = False
-
-            # Criptografa a senha corretamente para o login funcionar
             novo_usuario.set_password(form.cleaned_data['senha'])
-
-            # Grava no banco de dados
             novo_usuario.save()
 
+            messages.success(request, "Cadastro concluído com sucesso! Realize o login para continuar.")
             return redirect('login')
+        else:
+            messages.error(request, "Não foi possível concluir o cadastro. Verifique se o e-mail ou matrícula já estão em uso.")
     else:
         form = UsuarioForm()
 
@@ -91,18 +125,17 @@ def registrar(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('painel')
+        return redirect('inicio')
     erro = None
     if request.method == "POST":
         email = request.POST.get("email")
         senha = request.POST.get("senha")
 
-        # O Django compara a senha digitada com o hash salvo no banco automaticamente
         usuario = authenticate(request, username=email, password=senha)
 
         if usuario is not None:
-            login(request, usuario)  # Cria a sessão segura nativa
-            return redirect("painel")
+            login(request, usuario)
+            return redirect("inicio")
         else:
             erro = "Email ou senha incorretos."
 
@@ -110,15 +143,37 @@ def login_view(request):
 
 
 def logout_view(request):
-    logout(request)  # Destrói a sessão nativa com segurança
+    logout(request)
     return redirect("login")
 
 
-# Este decorador atende ao seu RNF02 (Controle de Acesso no backend)
+@login_required(login_url='/login/')
+def inicio(request):
+    limpar_emprestimos_expirados()
+    verificar_notificacoes_pendentes()
+
+    total_disponiveis = Objeto.objects.filter(status='DISPONIVEL').count()
+    meus_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO').count()
+    meus_concluidos = Emprestimo.objects.filter(usuario=request.user, status_geral='CONCLUIDO').count()
+
+    emprestimo_destaque = Emprestimo.objects.filter(
+        usuario=request.user,
+        status_geral__in=['ATIVO', 'PENDENTE']
+    ).order_by('-id').first()
+
+    contexto = {
+        'total_disponiveis': total_disponiveis,
+        'meus_ativos': meus_ativos,
+        'meus_concluidos': meus_concluidos,
+        'emprestimo_destaque': emprestimo_destaque,
+    }
+    return render(request, 'inicio.html', contexto)
+
+
 @login_required(login_url='/login/')
 def painel(request):
     limpar_emprestimos_expirados()
-    # Filtra apenas os empréstimos do usuário logado e ordena do mais recente para o mais antigo
+    verificar_notificacoes_pendentes()
     meus_emprestimos = Emprestimo.objects.filter(usuario=request.user).order_by('-id')
 
     contexto = {
@@ -131,19 +186,20 @@ def painel(request):
 @login_required(login_url='/login/')
 def catalogo_objetos(request):
     limpar_emprestimos_expirados()
+    verificar_notificacoes_pendentes()
 
-    usuario_bloqueado = False
+    tem_atraso = False
     emprestimos_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO')
     for emp in emprestimos_ativos:
         if emp.esta_atrasado():
-            usuario_bloqueado = True
+            tem_atraso = True
             break
 
-    # AQUI --> Em vez de buscar Objetos, buscamos as Subcategorias (Ex: "Bolas de Vôlei")
-    # E o Django já conta quantos objetos 'DISPONIVEIS' existem dentro de cada uma!
+    usuario_bloqueado = request.user.esta_bloqueado or tem_atraso
+
     subcategorias = Subcategoria.objects.annotate(
         qtd_disponivel=Count('objetos', filter=Q(objetos__status='DISPONIVEL'))
-    ).filter(qtd_disponivel__gt=0) # Só mostra se tiver 1 ou mais no estoque
+    ).filter(qtd_disponivel__gt=0)
 
     categorias = Categoria.objects.all()
     query = request.GET.get('q')
@@ -159,27 +215,27 @@ def catalogo_objetos(request):
         subcategorias = subcategorias.filter(categoria_id=categoria_id)
 
     contexto = {
-        'subcategorias': subcategorias, # AQUI --> Mandamos para o front-end
+        'subcategorias': subcategorias,
         'categorias': categorias,
         'busca_atual': query,
         'categoria_atual': str(categoria_id) if categoria_id else '',
-        'usuario_bloqueado': usuario_bloqueado
+        'usuario_bloqueado': usuario_bloqueado,
+        'tem_atraso': tem_atraso,
     }
     return render(request, 'catalogo.html', contexto)
 
 @login_required(login_url='/login/')
 def solicitar_emprestimo(request, objeto_id):
-    # Busca o objeto ou retorna erro 404 se não existir
+    if request.user.esta_bloqueado:
+        messages.error(request, f"Você está suspenso de realizar empréstimos até {request.user.bloqueado_ate.strftime('%d/%m/%Y %H:%M')} devido a atraso na devolução.")
+        return redirect('painel')
+
     objeto = get_object_or_404(Objeto, id=objeto_id, status='DISPONIVEL')
 
-    # Define a data de expiração da solicitação (ex: 24 horas para retirar)
     data_exp = timezone.now() + timedelta(days=1)
-
-    # Gera códigos únicos de retirada e devolução (8 caracteres)
     cod_retirada = str(uuid.uuid4())[:8].upper()
     cod_devolucao = str(uuid.uuid4())[:8].upper()
 
-    # Cria o Empréstimo principal com os novos códigos
     emprestimo = Emprestimo.objects.create(
         usuario=request.user,
         data_expiracao=data_exp,
@@ -188,8 +244,12 @@ def solicitar_emprestimo(request, objeto_id):
         status_geral='PENDENTE'
     )
 
-    # Cria o Item do Empréstimo vinculando o objeto
-    prazo_devolucao = timezone.now() + timedelta(days=objeto.categoria.prazo_dias)
+    subcat = objeto.subcategoria
+    if subcat.prazo_unidade == 'HORAS':
+        prazo_devolucao = timezone.now() + timedelta(hours=subcat.prazo_valor)
+    else:
+        prazo_devolucao = timezone.now() + timedelta(days=subcat.prazo_valor)
+
     ItemEmprestimo.objects.create(
         emprestimo=emprestimo,
         objeto=objeto,
@@ -197,7 +257,6 @@ def solicitar_emprestimo(request, objeto_id):
         status_item='AGUARDANDO_RETIRADA'
     )
 
-    # Altera o status do objeto para emprestado/reservado
     objeto.status = 'EMPRESTADO'
     objeto.save()
 
@@ -206,8 +265,7 @@ def solicitar_emprestimo(request, objeto_id):
 
 @login_required(login_url='/login/')
 def validar_codigo(request):
-    # Se não for funcionário/admin, manda de volta pro painel
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
     mensagem = None
@@ -216,24 +274,20 @@ def validar_codigo(request):
     if request.method == "POST":
         codigo = request.POST.get("codigo").strip().upper()
 
-        # 1. Verifica se é um código de RETIRADA
         emprestimo_retirada = Emprestimo.objects.filter(codigo_retirada=codigo, status_geral='PENDENTE').first()
 
         if emprestimo_retirada:
-            emprestimo_retirada.status_geral = 'ATIVO'  # Altera o status do empréstimo
+            emprestimo_retirada.status_geral = 'ATIVO'
             emprestimo_retirada.save()
+            notificar_retirada_confirmada(emprestimo_retirada)
 
             mensagem = f"Retirada confirmada! Objeto liberado para {emprestimo_retirada.usuario.nome_completo}."
             cor_mensagem = "success"
-
         else:
-            # 2. Se não for retirada, verifica se é um código de DEVOLUÇÃO
             emprestimo_devolucao = Emprestimo.objects.filter(codigo_devolucao=codigo, status_geral='ATIVO').first()
 
             if emprestimo_devolucao:
-                # AQUI ACONTECE A MÁGICA: Em vez de concluir, redireciona para a tela de avaliação!
                 return redirect('avaliar_devolucao', emprestimo_id=emprestimo_devolucao.id)
-
             else:
                 mensagem = "Código inválido, expirado ou não encontrado no sistema."
                 cor_mensagem = "danger"
@@ -244,13 +298,11 @@ def validar_codigo(request):
 @login_required(login_url='/login/')
 def gerenciar_emprestimos(request):
     limpar_emprestimos_expirados()
-    # Bloqueia se não for funcionário
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
     todos_emprestimos = Emprestimo.objects.all().order_by('-id')
 
-    # --- Lógica das Estatísticas ---
     total_objetos = Objeto.objects.count()
     disponiveis = Objeto.objects.filter(status='DISPONIVEL').count()
     emprestados = Objeto.objects.filter(status='EMPRESTADO').count()
@@ -274,7 +326,6 @@ def cancelar_emprestimo(request, emprestimo_id):
     emprestimo.status_geral = 'CANCELADO'
     emprestimo.save()
 
-    # AGORA BUSCAMOS TODOS OS ITENS DO PEDIDO E NÃO SÓ O PRIMEIRO
     itens = ItemEmprestimo.objects.filter(emprestimo=emprestimo)
     for item in itens:
         item.status_item = 'CANCELADO'
@@ -283,28 +334,26 @@ def cancelar_emprestimo(request, emprestimo_id):
         if item.objeto:
             item.objeto.status = 'DISPONIVEL'
             item.objeto.save()
-
+    notificar_cancelamento(emprestimo)
     return redirect('painel')
+
 
 @login_required(login_url='/login/')
 def avaliar_devolucao(request, emprestimo_id):
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
     emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, status_geral='ATIVO')
-
-    # Filtra APENAS os itens que ainda NÃO foram devolvidos
     itens_pendentes = ItemEmprestimo.objects.filter(emprestimo=emprestimo).exclude(status_item='DEVOLVIDO')
 
     if request.method == 'POST':
         itens_devolvidos_agora = 0
+        estava_atrasado = emprestimo.esta_atrasado()
 
         for item in itens_pendentes:
             nova_condicao = request.POST.get(f'condicao_{item.id}')
-            # A observacao está sendo capturada aqui (podemos salvar no banco no futuro se quiser)
             observacao = request.POST.get(f'obs_{item.id}')
 
-            # Se o funcionário marcou uma condição e NÃO escolheu "Ainda com o aluno"
             if nova_condicao and nova_condicao != 'NAO_DEVOLVIDO':
                 objeto = item.objeto
                 objeto.condicao = nova_condicao
@@ -321,21 +370,34 @@ def avaliar_devolucao(request, emprestimo_id):
 
                 itens_devolvidos_agora += 1
 
-        # Verifica se ainda sobrou algum item com o aluno após essa devolução
         ainda_pendentes = ItemEmprestimo.objects.filter(emprestimo=emprestimo).exclude(status_item='DEVOLVIDO').count()
 
         if ainda_pendentes == 0:
-            # Tudo devolvido! Conclui o pedido
             emprestimo.status_geral = 'CONCLUIDO'
             emprestimo.save()
-            mensagem = "Devolução finalizada! Todos os itens deste pedido foram retornados."
+            notificar_devolucao_confirmada(emprestimo, parcial=False)
+
+            if estava_atrasado and itens_devolvidos_agora > 0:
+                params = ParametrosSistema.carregar()
+                solicitante = emprestimo.usuario
+                solicitante.bloqueado_ate = timezone.now() + timedelta(days=params.dias_suspensao_atraso)
+                solicitante.motivo_bloqueio = f"Devolução em atraso referente ao Pedido #{emprestimo.id}."
+                solicitante.save()
+                notificar_suspensao(solicitante)
+                mensagem = f"Devolução finalizada com atraso! O usuário {solicitante.nome_completo} foi suspenso por {params.dias_suspensao_atraso} dia(s)."
+                cor = 'warning'
+            else:
+                mensagem = "Devolução finalizada! Todos os itens deste pedido foram retornados."
+                cor = 'success'
         else:
-            # Faltam itens, mantém o empréstimo ATIVO
+            if itens_devolvidos_agora > 0:
+                notificar_devolucao_confirmada(emprestimo, parcial=True)
             mensagem = f"Devolução PARCIAL registrada! {itens_devolvidos_agora} item(ns) retornado(s). O aluno ainda precisa devolver {ainda_pendentes} item(ns)."
+            cor = 'success'
 
         return render(request, 'validar_codigo.html', {
             'mensagem': mensagem,
-            'cor_mensagem': 'success'
+            'cor_mensagem': cor
         })
 
     opcoes_condicao = Objeto._meta.get_field('condicao').choices
@@ -349,10 +411,9 @@ def avaliar_devolucao(request, emprestimo_id):
 
 @login_required(login_url='/login/')
 def gerenciar_manutencao(request):
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
-    # Busca apenas os objetos que estão com status de manutenção
     objetos_manutencao = Objeto.objects.filter(status='MANUTENCAO').order_by('nome_objeto')
 
     return render(request, 'manutencao.html', {'objetos': objetos_manutencao})
@@ -360,12 +421,11 @@ def gerenciar_manutencao(request):
 
 @login_required(login_url='/login/')
 def concluir_manutencao(request, objeto_id):
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
     objeto = get_object_or_404(Objeto, id=objeto_id, status='MANUTENCAO')
 
-    # Restaura a condição para perfeito e o status para disponível
     objeto.condicao = 'INTEGRO'
     objeto.status = 'DISPONIVEL'
     objeto.save()
@@ -375,6 +435,10 @@ def concluir_manutencao(request, objeto_id):
 
 @login_required(login_url='/login/')
 def adicionar_ao_pedido(request, subcategoria_id):
+    if request.user.esta_bloqueado:
+        messages.error(request, f"Você está suspenso de realizar empréstimos até {request.user.bloqueado_ate.strftime('%d/%m/%Y %H:%M')} devido a atraso na devolução.")
+        return redirect('catalogo')
+
     if 'carrinho' not in request.session:
         request.session['carrinho'] = []
 
@@ -392,10 +456,7 @@ def adicionar_ao_pedido(request, subcategoria_id):
             carrinho.append(subcategoria_id)
         request.session.modified = True
 
-        # MENSAGEM DE SUCESSO PADRÃO
-        messages.success(request,
-                         f"Objeto selecionado! Vá até 'Meu Pedido' para finalizar seu pedido de {subcat.nome_subcategoria}.")
-
+        messages.success(request, f"Objeto selecionado! Vá até 'Meu Pedido' para finalizar seu pedido de {subcat.nome_subcategoria}.")
     else:
         qtd_permitida = limite_real - qtd_no_carrinho
         if qtd_permitida > 0:
@@ -403,11 +464,8 @@ def adicionar_ao_pedido(request, subcategoria_id):
                 carrinho.append(subcategoria_id)
             request.session.modified = True
 
-            # MENSAGEM DE AVISO (ADICIONOU MENOS DO QUE PEDIU)
-            messages.warning(request,
-                             f"Atenção: Você pediu {quantidade}, mas o limite disponível para você é {qtd_permitida}. Adicionamos {qtd_permitida} item(ns) ao carrinho.")
+            messages.warning(request, f"Atenção: Você pediu {quantidade}, mas o limite disponível para você é {qtd_permitida}. Adicionamos {qtd_permitida} item(ns) ao carrinho.")
         else:
-            # MENSAGEM DE ERRO (JÁ BATEU O LIMITE ANTES)
             messages.error(request, f"Você já atingiu o limite máximo de {limite_real} para este item no seu carrinho.")
 
     return redirect('catalogo')
@@ -416,14 +474,11 @@ def adicionar_ao_pedido(request, subcategoria_id):
 @login_required(login_url='/login/')
 def revisar_pedido(request):
     carrinho_ids = request.session.get('carrinho', [])
-
-    # O Counter agrupa os itens. Ex: Se tem 5 bolas, ele faz {id_da_bola: 5}
     contagem = Counter(carrinho_ids)
 
     itens_carrinho = []
     total_itens = len(carrinho_ids)
 
-    # Montamos uma lista bonitinha para mandar para o HTML
     for sub_id, qtd in contagem.items():
         subcat = get_object_or_404(Subcategoria, id=sub_id)
         itens_carrinho.append({
@@ -432,10 +487,15 @@ def revisar_pedido(request):
         })
 
     if request.method == 'POST':
+        if request.user.esta_bloqueado:
+            messages.error(request, f"Você está suspenso de realizar empréstimos até {request.user.bloqueado_ate.strftime('%d/%m/%Y %H:%M')} devido a atraso na devolução.")
+            return redirect('painel')
+
         if not itens_carrinho:
             return redirect('catalogo')
 
-        data_expiracao = timezone.now() + timedelta(hours=24)
+        params = ParametrosSistema.carregar()
+        data_expiracao = timezone.now() + timedelta(hours=params.horas_expiracao_pedido)
         codigo_ret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         codigo_dev = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
@@ -447,12 +507,10 @@ def revisar_pedido(request):
             status_geral='PENDENTE'
         )
 
-        # Agora passamos por cada grupo (Ex: 5 Bolas de Vôlei)
         for item in itens_carrinho:
             subcat = item['subcategoria']
             quantidade = item['quantidade']
 
-            # Puxamos exatamente a quantidade de objetos que ele pediu!
             objetos_livres = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL')[:quantidade]
 
             for objeto_livre in objetos_livres:
@@ -471,14 +529,9 @@ def revisar_pedido(request):
                 objeto_livre.status = 'EMPRESTADO'
                 objeto_livre.save()
 
-        # Limpa o carrinho
         request.session['carrinho'] = []
         request.session.modified = True
-
-        data_local = timezone.localtime(novo_emprestimo.data_expiracao)
-        data_formatada = data_local.strftime('%d/%m/%Y às %H:%M')
-
-        # Se tiver configurado disparo de email, a lógica fica aqui...
+        notificar_solicitacao_criada(novo_emprestimo)
 
         return redirect('painel')
 
@@ -487,10 +540,10 @@ def revisar_pedido(request):
         'total_itens': total_itens
     })
 
+
 @login_required(login_url='/login/')
 def remover_do_pedido(request, subcategoria_id):
     carrinho = request.session.get('carrinho', [])
-    # Filtra a lista mantendo apenas os IDs diferentes do que o aluno clicou para remover
     request.session['carrinho'] = [item_id for item_id in carrinho if item_id != subcategoria_id]
     request.session.modified = True
     return redirect('revisar_pedido')
@@ -500,14 +553,13 @@ def remover_do_pedido(request, subcategoria_id):
 def renovar_emprestimo(request, emprestimo_id):
     emprestimo = get_object_or_404(Emprestimo, id=emprestimo_id, usuario=request.user, status_geral='ATIVO')
 
-    if not emprestimo.esta_atrasado():
+    if not emprestimo.esta_atrasado() and not request.user.esta_bloqueado:
         nova_data_maxima = emprestimo.data_expiracao
         itens_pendentes = emprestimo.itens.exclude(status_item='DEVOLVIDO')
 
         for item in itens_pendentes:
             subcat = item.objeto.subcategoria
 
-            # AQUI --> Lógica de horas/dias aplicada também na renovação
             if subcat.prazo_unidade == 'HORAS':
                 item.data_devolucao_prevista += timedelta(hours=subcat.prazo_valor)
             else:
@@ -534,18 +586,17 @@ def meu_perfil(request):
         telefone = request.POST.get('telefone')
         senha = request.POST.get('senha')
         confirmar_senha = request.POST.get('confirmar_senha')
+        foto = request.FILES.get('foto_perfil')
 
         usuario = request.user
-
-        # 1. Atualiza o telefone
         usuario.telefone = telefone
+        if foto:
+            usuario.foto_perfil = foto
 
-        # 2. Verifica se o aluno preencheu algo na senha
         if senha or confirmar_senha:
             if senha == confirmar_senha:
                 usuario.set_password(senha)
                 usuario.save()
-                # Mantém o aluno logado após mudar a senha
                 update_session_auth_hash(request, usuario)
 
                 mensagem = "Perfil e senha atualizados com sucesso!"
@@ -554,9 +605,8 @@ def meu_perfil(request):
                 mensagem = "As senhas não coincidem. Tente novamente."
                 cor_mensagem = "danger"
         else:
-            # Se não mexeu na senha, só salva o telefone
             usuario.save()
-            mensagem = "Telefone atualizado com sucesso!"
+            mensagem = "Perfil atualizado com sucesso!"
             cor_mensagem = "success"
 
     return render(request, 'meu_perfil.html', {
@@ -567,11 +617,12 @@ def meu_perfil(request):
 
 @login_required(login_url='/login/')
 def relatorio_inventario_pdf(request):
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
-    # Busca todos os objetos ordenados primeiro por categoria, depois por nome
-    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+    objetos = Objeto.objects.select_related('subcategoria', 'subcategoria__categoria').all().order_by(
+        'subcategoria__categoria__nome_categoria', 'subcategoria__nome_subcategoria', 'nome_objeto'
+    )
 
     contexto = {
         'objetos': objetos,
@@ -579,19 +630,16 @@ def relatorio_inventario_pdf(request):
         'disponiveis': objetos.filter(status='DISPONIVEL').count(),
         'emprestados': objetos.filter(status='EMPRESTADO').count(),
         'manutencao': objetos.filter(status='MANUTENCAO').count(),
-        'data_geracao': timezone.now()
+        'inativos': objetos.filter(status='INATIVO').count(),
+        'data_geracao': timezone.localtime(timezone.now())
     }
 
-    # Carrega o HTML que será usado como "molde"
     template = get_template('relatorio_pdf.html')
     html = template.render(contexto)
 
-    # Configura a resposta para forçar o download de um arquivo PDF
     response = HttpResponse(content_type='application/pdf')
-    # Use 'attachment' para baixar direto, ou 'inline' para abrir no navegador antes
     response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.pdf"'
 
-    # Converte o HTML em PDF
     pisa_status = pisa.CreatePDF(html, dest=response)
 
     if pisa_status.err:
@@ -601,35 +649,91 @@ def relatorio_inventario_pdf(request):
 
 
 @login_required(login_url='/login/')
+def dashboard_relatorios(request):
+    if not is_atendente_ou_admin(request.user):
+        messages.error(request, "Você não tem permissão para acessar os relatórios.")
+        return redirect('inicio')
+
+    total_emprestimos = Emprestimo.objects.count()
+    ativos = Emprestimo.objects.filter(status_geral='ATIVO').count()
+    concluidos = Emprestimo.objects.filter(status_geral='CONCLUIDO').count()
+    expirados_cancelados = Emprestimo.objects.filter(status_geral__in=['EXPIRADO', 'CANCELADO']).count()
+
+    atrasados_agora = sum(
+        1 for emp in Emprestimo.objects.filter(status_geral='ATIVO') if emp.esta_atrasado()
+    )
+
+    usuarios_suspensos = Usuario.objects.filter(bloqueado_ate__gt=timezone.now()).count()
+
+    # Situação do Acervo (Gráfico de Rosca)
+    acervo_labels = ['Disponíveis', 'Emprestados', 'Em Manutenção', 'Inativos']
+    acervo_valores = [
+        Objeto.objects.filter(status='DISPONIVEL').count(),
+        Objeto.objects.filter(status='EMPRESTADO').count(),
+        Objeto.objects.filter(status='MANUTENCAO').count(),
+        Objeto.objects.filter(status='INATIVO').count(),
+    ]
+
+    # Top 5 Subcategorias Mais Emprestadas (Gráfico de Barras)
+    ranking_subcategorias = (
+        ItemEmprestimo.objects
+        .values('objeto__subcategoria__nome_subcategoria')
+        .annotate(total=Count('id'))
+        .order_by('-total')[:5]
+    )
+    top_labels = [item['objeto__subcategoria__nome_subcategoria'] for item in ranking_subcategorias]
+    top_valores = [item['total'] for item in ranking_subcategorias]
+
+    # Status dos Pedidos (Gráfico de Barras Horizontais)
+    pedidos_labels = ['Pendentes', 'Ativos', 'Concluídos', 'Expirados/Cancelados']
+    pedidos_valores = [
+        Emprestimo.objects.filter(status_geral='PENDENTE').count(),
+        ativos,
+        concluidos,
+        expirados_cancelados,
+    ]
+
+    return render(request, 'relatorios.html', {
+        'total_emprestimos': total_emprestimos,
+        'ativos': ativos,
+        'concluidos': concluidos,
+        'atrasados_agora': atrasados_agora,
+        'usuarios_suspensos': usuarios_suspensos,
+        'acervo_labels_json': json.dumps(acervo_labels),
+        'acervo_valores_json': json.dumps(acervo_valores),
+        'top_labels_json': json.dumps(top_labels),
+        'top_valores_json': json.dumps(top_valores),
+        'pedidos_labels_json': json.dumps(pedidos_labels),
+        'pedidos_valores_json': json.dumps(pedidos_valores),
+    })
+
+@login_required(login_url='/login/')
 def relatorio_inventario_csv(request):
-    if not request.user.is_staff:
+    if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
-    # Configura a resposta para baixar um arquivo CSV
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="inventario_sigeo.csv"'
 
     response.write('\ufeff')
 
-    # Cria o "escritor" do arquivo
     writer = csv.writer(response, delimiter=';')
+    # Adicionado 'Data de Cadastro' no cabeçalho
+    writer.writerow(['Patrimônio', 'Objeto', 'Subcategoria', 'Data de Cadastro', 'Condição', 'Status Atual'])
 
-    # Escreve a primeira linha (Cabeçalhos das colunas)
-    writer.writerow(['Patrimônio', 'Objeto', 'Categoria', 'Condição', 'Status Atual'])
-
-    # Busca os objetos e escreve uma linha para cada um
-    objetos = Objeto.objects.all().order_by('categoria__nome_categoria', 'nome_objeto')
+    objetos = Objeto.objects.all().order_by('subcategoria', 'nome_objeto')
     for obj in objetos:
+        data_cad = obj.data_cadastro.strftime('%d/%m/%Y') if hasattr(obj, 'data_cadastro') and obj.data_cadastro else '-'
         writer.writerow([
             obj.cg_patrimonio if obj.cg_patrimonio else 'S/N',
             obj.nome_objeto,
-            obj.categoria.nome_categoria,
+            str(obj.subcategoria) if obj.subcategoria else 'Sem Subcategoria',
+            data_cad, # Adicionado aqui
             obj.get_condicao_display(),
             obj.get_status_display()
         ])
 
     return response
-
 
 @login_required(login_url='/login/')
 def aumentar_qtd_pedido(request, subcategoria_id):
@@ -639,7 +743,6 @@ def aumentar_qtd_pedido(request, subcategoria_id):
     qtd_disponivel = Objeto.objects.filter(subcategoria=subcat, status='DISPONIVEL').count()
     qtd_no_carrinho = carrinho.count(subcategoria_id)
 
-    # NOVO: Mesma regra de limite blindada para o botão de "+"
     limite_real = min(qtd_disponivel, subcat.limite_max_itens)
 
     if qtd_no_carrinho < limite_real:
@@ -653,6 +756,316 @@ def aumentar_qtd_pedido(request, subcategoria_id):
 def diminuir_qtd_pedido(request, subcategoria_id):
     carrinho = request.session.get('carrinho', [])
     if subcategoria_id in carrinho:
-        carrinho.remove(subcategoria_id)  # Remove apenas UMA unidade (a primeira que achar)
+        carrinho.remove(subcategoria_id)
         request.session.modified = True
     return redirect('revisar_pedido')
+
+
+# ==========================================================
+# ETAPA 3: GESTÃO DE OBJETOS E USUÁRIOS
+# ==========================================================
+
+@login_required(login_url='/login/')
+def gerenciar_objetos(request):
+    if not is_atendente_ou_admin(request.user):
+        messages.error(request, "Você não tem permissão para acessar esta página.")
+        return redirect('inicio')
+
+    # Cadastro em lote (Apenas Admin)
+    if request.method == 'POST':
+        if not is_admin(request.user):
+            messages.error(request, "Apenas administradores podem cadastrar novos objetos.")
+            return redirect('gerenciar_objetos')
+
+        subcategoria_id = request.POST.get('subcategoria')
+        nome_base = request.POST.get('nome_objeto', '').strip()
+        quantidade = int(request.POST.get('quantidade', 1))
+        patrimonios_texto = request.POST.get('patrimonios', '').strip()
+
+        subcategoria = get_object_or_404(Subcategoria, id=subcategoria_id)
+        lista_patrimonios = [p.strip() for p in patrimonios_texto.splitlines() if p.strip()]
+        if lista_patrimonios and len(lista_patrimonios) != quantidade:
+            messages.error(
+                request,
+                f"Atenção: Você informou quantidade {quantidade}, mas digitou {len(lista_patrimonios)} patrimônio(s). Ajuste os valores para coincidirem."
+            )
+            return redirect('gerenciar_objetos')
+
+        criados = 0
+        for i in range(quantidade):
+            patrimonio = lista_patrimonios[i] if i < len(lista_patrimonios) else None
+            nome_final = f"{nome_base} #{i+1}" if (quantidade > 1 and not patrimonio) else nome_base
+
+            Objeto.objects.create(
+                subcategoria=subcategoria,
+                nome_objeto=nome_final,
+                cg_patrimonio=patrimonio,
+                status='DISPONIVEL'
+            )
+            criados += 1
+
+        messages.success(request, f"{criados} objeto(s) cadastrado(s) com sucesso!")
+        return redirect('gerenciar_objetos')
+
+    # Filtros de visualização (Atendente e Admin)
+    busca = request.GET.get('busca', '').strip()
+    filtro_status = request.GET.get('status', '')
+    filtro_subcategoria = request.GET.get('subcategoria', '')
+
+    objetos = Objeto.objects.select_related('subcategoria', 'subcategoria__categoria').all().order_by('-id')
+
+    if busca:
+        objetos = objetos.filter(Q(nome_objeto__icontains=busca) | Q(cg_patrimonio__icontains=busca))
+    if filtro_status:
+        objetos = objetos.filter(status=filtro_status)
+    if filtro_subcategoria:
+        objetos = objetos.filter(subcategoria_id=filtro_subcategoria)
+
+    subcategorias = Subcategoria.objects.select_related('categoria').all().order_by('nome_subcategoria')
+
+    return render(request, 'gerenciar_objetos.html', {
+        'objetos': objetos,
+        'subcategorias': subcategorias,
+        'busca': busca,
+        'filtro_status': filtro_status,
+        'filtro_subcategoria': filtro_subcategoria,
+        'categorias': Categoria.objects.all().order_by('nome_categoria')
+    })
+
+
+@login_required(login_url='/login/')
+def editar_objeto(request, objeto_id):
+    if not is_admin(request.user):
+        messages.error(request, "Apenas administradores podem editar objetos.")
+        return redirect('gerenciar_objetos')
+
+    objeto = get_object_or_404(Objeto, id=objeto_id)
+    if request.method == 'POST':
+        objeto.nome_objeto = request.POST.get('nome_objeto', objeto.nome_objeto).strip()
+        patrimonio = request.POST.get('cg_patrimonio', '').strip()
+        objeto.cg_patrimonio = patrimonio if patrimonio else None
+        subcategoria_id = request.POST.get('subcategoria')
+        if subcategoria_id:
+            objeto.subcategoria = get_object_or_404(Subcategoria, id=subcategoria_id)
+        objeto.save()
+
+        nova_imagem = request.FILES.get('imagem_subcategoria')
+        if nova_imagem:
+            objeto.subcategoria.imagem = nova_imagem
+            objeto.subcategoria.save()
+
+        messages.success(request, f"Objeto '{objeto.nome_objeto}' atualizado!")
+
+    return redirect('gerenciar_objetos')
+
+
+@login_required(login_url='/login/')
+def alternar_status_objeto(request, objeto_id):
+    if not is_admin(request.user):
+        messages.error(request, "Apenas administradores podem inativar ou reativar objetos.")
+        return redirect('gerenciar_objetos')
+
+    objeto = get_object_or_404(Objeto, id=objeto_id)
+    if objeto.status == 'EMPRESTADO':
+        messages.error(request, "Não é possível inativar um objeto que está emprestado no momento.")
+    elif objeto.status == 'INATIVO':
+        objeto.status = 'DISPONIVEL'
+        objeto.save()
+        messages.success(request, f"Objeto '{objeto.nome_objeto}' reativado e disponível no catálogo.")
+    else:
+        objeto.status = 'INATIVO'
+        objeto.save()
+        messages.warning(request, f"Objeto '{objeto.nome_objeto}' foi inativado.")
+
+    return redirect('gerenciar_objetos')
+
+
+@login_required(login_url='/login/')
+def gerenciar_usuarios(request):
+    if not is_admin(request.user):
+        messages.error(request, "Acesso restrito aos administradores.")
+        return redirect('inicio')
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome_completo', '').strip()
+        email = request.POST.get('email', '').strip()
+        matricula = request.POST.get('matricula', '').strip()
+        telefone = request.POST.get('telefone', '').strip()
+        perfil = request.POST.get('perfil', 'SOLICITANTE')
+        senha = request.POST.get('senha', '')
+
+        if Usuario.objects.filter(email=email).exists() or Usuario.objects.filter(matricula=matricula).exists():
+            messages.error(request, "Já existe um usuário cadastrado com este e-mail ou matrícula.")
+        else:
+            Usuario.objects.create_user(
+                email=email,
+                matricula=matricula,
+                nome_completo=nome,
+                telefone=telefone,
+                perfil=perfil,
+                password=senha
+            )
+            messages.success(request, f"Usuário {nome} cadastrado com sucesso!")
+        return redirect('gerenciar_usuarios')
+
+    busca = request.GET.get('busca', '').strip()
+    filtro_perfil = request.GET.get('perfil', '')
+    filtro_bloqueio = request.GET.get('bloqueio', '')
+
+    usuarios = Usuario.objects.all().order_by('nome_completo')
+    if busca:
+        usuarios = usuarios.filter(
+            Q(nome_completo__icontains=busca) |
+            Q(email__icontains=busca) |
+            Q(matricula__icontains=busca)
+        )
+    if filtro_perfil:
+        usuarios = usuarios.filter(perfil=filtro_perfil)
+    if filtro_bloqueio == 'BLOQUEADO':
+        usuarios = usuarios.filter(bloqueado_ate__gt=timezone.now())
+
+    return render(request, 'gerenciar_usuarios.html', {
+        'usuarios': usuarios,
+        'busca': busca,
+        'filtro_perfil': filtro_perfil,
+        'filtro_bloqueio': filtro_bloqueio,
+    })
+
+
+@login_required(login_url='/login/')
+def alterar_usuario(request, usuario_id):
+    if not is_admin(request.user):
+        return redirect('inicio')
+
+    alvo = get_object_or_404(Usuario, id=usuario_id)
+    if request.method == 'POST':
+        novo_perfil = request.POST.get('perfil')
+        ativo = request.POST.get('is_active') == 'on'
+        dias_bloqueio = request.POST.get('dias_bloqueio', '').strip()
+        motivo = request.POST.get('motivo_bloqueio', '').strip()
+
+        if alvo == request.user and (novo_perfil != 'ADMIN' or not ativo):
+            messages.error(request, "Você não pode remover seu próprio acesso de administrador ou desativar sua conta.")
+            return redirect('gerenciar_usuarios')
+
+        if novo_perfil in ['ADMIN', 'ATENDENTE', 'SOLICITANTE']:
+            alvo.perfil = novo_perfil
+        alvo.is_active = ativo
+
+        aplicou_bloqueio = False
+        if dias_bloqueio and int(dias_bloqueio) > 0:
+            alvo.bloqueado_ate = timezone.now() + timedelta(days=int(dias_bloqueio))
+            alvo.motivo_bloqueio = motivo if motivo else "Suspensão administrativa aplicada pela coordenação."
+            aplicou_bloqueio = True
+        elif motivo and alvo.esta_bloqueado:
+            alvo.motivo_bloqueio = motivo
+
+        alvo.save()
+        if aplicou_bloqueio:
+            notificar_suspensao(alvo)
+
+        messages.success(request, f"Dados e permissões de {alvo.nome_completo} atualizados!")
+
+    return redirect('gerenciar_usuarios')
+
+@login_required(login_url='/login/')
+def liberar_bloqueio(request, usuario_id):
+    if not is_admin(request.user):
+        return redirect('inicio')
+
+    alvo = get_object_or_404(Usuario, id=usuario_id)
+    alvo.bloqueado_ate = None
+    alvo.motivo_bloqueio = None
+    alvo.save()
+    messages.success(request, f"Bloqueio de {alvo.nome_completo} liberado com sucesso!")
+    return redirect('gerenciar_usuarios')
+
+@login_required(login_url='/login/')
+def cadastrar_categoria(request):
+    if not is_admin(request.user):
+        messages.error(request, "Apenas administradores podem cadastrar categorias.")
+        return redirect('gerenciar_objetos')
+
+    if request.method == 'POST':
+        nome = request.POST.get('nome_categoria', '').strip()
+        if nome:
+            if Categoria.objects.filter(nome_categoria__iexact=nome).exists():
+                messages.warning(request, f"A categoria '{nome}' já existe.")
+            else:
+                Categoria.objects.create(nome_categoria=nome)
+                messages.success(request, f"Categoria '{nome}' criada com sucesso!")
+
+    return redirect('gerenciar_objetos')
+
+
+@login_required(login_url='/login/')
+def cadastrar_subcategoria(request):
+    if not is_admin(request.user):
+        messages.error(request, "Apenas administradores podem cadastrar subcategorias.")
+        return redirect('gerenciar_objetos')
+
+    if request.method == 'POST':
+        categoria_id = request.POST.get('categoria')
+        nome = request.POST.get('nome_subcategoria', '').strip()
+        limite_max = int(request.POST.get('limite_max_itens', 1))
+        prazo_valor = int(request.POST.get('prazo_valor', 1))
+        prazo_unidade = request.POST.get('prazo_unidade', 'DIAS')
+        imagem = request.FILES.get('imagem')
+
+        categoria = get_object_or_404(Categoria, id=categoria_id)
+        Subcategoria.objects.create(
+            categoria=categoria,
+            nome_subcategoria=nome,
+            limite_max_itens=limite_max,
+            prazo_valor=prazo_valor,
+            prazo_unidade=prazo_unidade,
+            imagem=imagem
+        )
+        messages.success(request, f"Subcategoria '{nome}' cadastrada com sucesso!")
+
+    return redirect('gerenciar_objetos')
+
+@login_required(login_url='/login/')
+def configurar_parametros(request):
+    if not is_admin(request.user):
+        messages.error(request, "Acesso restrito aos administradores.")
+        return redirect('inicio')
+
+    parametros = ParametrosSistema.carregar()
+
+    if request.method == 'POST':
+        horas = int(request.POST.get('horas_expiracao_pedido', 24))
+        dias_suspensao = int(request.POST.get('dias_suspensao_atraso', 3))
+
+        parametros.horas_expiracao_pedido = max(1, horas)
+        parametros.dias_suspensao_atraso = max(1, dias_suspensao)
+        parametros.save()
+
+        messages.success(request, "Parâmetros gerais atualizados com sucesso!")
+        return redirect('configurar_parametros')
+
+    subcategorias = Subcategoria.objects.select_related('categoria').all().order_by(
+        'categoria__nome_categoria', 'nome_subcategoria'
+    )
+
+    return render(request, 'configurar_parametros.html', {
+        'parametros': parametros,
+        'subcategorias': subcategorias,
+    })
+
+
+@login_required(login_url='/login/')
+def editar_subcategoria(request, subcategoria_id):
+    if not is_admin(request.user):
+        return redirect('inicio')
+
+    subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
+    if request.method == 'POST':
+        subcat.nome_subcategoria = request.POST.get('nome_subcategoria', subcat.nome_subcategoria).strip()
+        subcat.limite_max_itens = max(1, int(request.POST.get('limite_max_itens', subcat.limite_max_itens)))
+        subcat.prazo_valor = max(1, int(request.POST.get('prazo_valor', subcat.prazo_valor)))
+        subcat.prazo_unidade = request.POST.get('prazo_unidade', subcat.prazo_unidade)
+        subcat.save()
+        messages.success(request, f"Política de prazo de '{subcat.nome_subcategoria}' atualizada!")
+
+    return redirect('configurar_parametros')

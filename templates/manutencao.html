@@ -25,7 +25,7 @@
                     <div class="card-body p-4">
                         <p class="card-text text-muted mb-3">
                             <strong class="text-dark">Patrimônio:</strong> {{ obj.cg_patrimonio|default:"Não informado" }}<br>
-                            <strong class="text-dark">Categoria:</strong> {{ obj.categoria.nome_categoria }}<br>
+                            <strong class="text-dark">Categoria:</strong> {{ obj.subcategoria.categoria.nome_categoria }} ({{ obj.subcategoria.nome_subcategoria }})<br>
                             <strong class="text-dark">Condição Atual:</strong> <span class="badge bg-danger bg-opacity-10 text-danger px-2 py-1 rounded-pill">{{ obj.get_condicao_display }}</span>
                         </p>
                     </div>

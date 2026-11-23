@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="fw-bold display-6 mb-1" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Gestão de Usuários
+            </h1>
+            <p class="text-muted fs-6 mb-0">Cadastre usuários, gerencie perfis, inative contas e libere bloqueios por atraso.</p>
+        </div>
+        <button type="button" class="btn btn-submit px-4 py-3 rounded-pill fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoUsuario">
+            <i class="bi bi-person-plus me-2"></i> Novo Usuário
+        </button>
+    </div>
+
+    <!-- Barra de Busca e Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <input type="text" name="busca" class="form-control rounded-3" placeholder="Buscar por nome, e-mail ou matrícula/SIAPE..." value="{{ busca }}">
+            </div>
+            <div class="col-md-3">
+                <select name="perfil" class="form-select rounded-3">
+                    <option value="">Todos os Perfis</option>
+                    <option value="SOLICITANTE" {% if filtro_perfil == 'SOLICITANTE' %}selected{% endif %}>Solicitante</option>
+                    <option value="ATENDENTE" {% if filtro_perfil == 'ATENDENTE' %}selected{% endif %}>Atendente</option>
+                    <option value="ADMIN" {% if filtro_perfil == 'ADMIN' %}selected{% endif %}>Administrador</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="bloqueio" class="form-select rounded-3">
+                    <option value="">Todos os Status</option>
+                    <option value="BLOQUEADO" {% if filtro_bloqueio == 'BLOQUEADO' %}selected{% endif %}>Apenas Bloqueados</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-3 w-100 fw-semibold">Filtrar</button>
+                <a href="{% url 'gerenciar_usuarios' %}" class="btn btn-outline-secondary rounded-3" title="Limpar"><i class="bi bi-x-lg"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela de Usuários -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase text-secondary" style="font-size: 0.82rem; letter-spacing: 0.8px;">
+                    <tr>
+                        <th class="py-3 px-4">Usuário</th>
+                        <th class="py-3">RA / SIAPE</th>
+                        <th class="py-3 text-center">Perfil</th>
+                        <th class="py-3 text-center">Conta / Bloqueio</th>
+                        <th class="py-3 text-center px-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                        <tr>
+                            <td class="py-3 px-4">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if u.foto_perfil %}
+                                        <img src="{{ u.foto_perfil.url }}" class="rounded-circle object-fit-cover border" style="width: 38px; height: 38px;">
+                                    {% else %}
+                                        <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center"
+                                             style="width: 38px; height: 38px; background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+                                            {{ u.nome_completo|slice:":1"|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div>
+                                        <span class="fw-bold text-dark d-block">{{ u.nome_completo }}</span>
+                                        <small class="text-muted">{{ u.email }} &bull; {{ u.telefone|default:"Sem tel." }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 font-monospace text-secondary">{{ u.matricula }}</td>
+                            <td class="py-3 text-center">
+                                <span class="badge rounded-pill px-3 py-2 fw-semibold
+                                    {% if u.perfil == 'ADMIN' %} bg-danger bg-opacity-10 text-danger
+                                    {% elif u.perfil == 'ATENDENTE' %} bg-primary bg-opacity-10 text-primary
+                                    {% else %} bg-secondary bg-opacity-10 text-secondary {% endif %}">
+                                    {{ u.get_perfil_display }}
+                                </span>
+                            </td>
+                            <td class="py-3 text-center">
+                                {% if not u.is_active %}
+                                    <span class="badge bg-dark bg-opacity-10 text-dark rounded-pill px-3 py-1">Conta Inativa</span>
+                                {% elif u.esta_bloqueado %}
+                                    <span class="badge bg-warning bg-opacity-25 text-dark rounded-pill px-3 py-1 d-inline-block mb-1">
+                                        <i class="bi bi-lock-fill text-danger me-1"></i> Suspenso até {{ u.bloqueado_ate|date:"d/m H:i" }}
+                                    </span>
+                                    {% if u.motivo_bloqueio %}
+                                        <small class="d-block text-muted fst-italic">{{ u.motivo_bloqueio }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1">Regular</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 text-center px-4">
+                                <div class="d-inline-flex gap-2">
+                                    {% if u.esta_bloqueado %}
+                                        <a href="{% url 'liberar_bloqueio' u.id %}" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold"
+                                           onclick="return confirm('Liberar o bloqueio deste usuário imediatamente?');">
+                                            <i class="bi bi-unlock me-1"></i> Liberar
+                                        </a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold"
+                                            data-bs-toggle="modal" data-bs-target="#modalUsuario{{ u.id }}">
+                                        <i class="bi bi-sliders me-1"></i> Gerenciar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <!-- Modal Gerenciar Usuário -->
+                        <div class="modal fade" id="modalUsuario{{ u.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow">
+                                    <form method="POST" action="{% url 'alterar_usuario' u.id %}">
+                                        {% csrf_token %}
+                                        <div class="modal-header border-bottom-0 pb-0">
+                                            <h5 class="modal-title fw-bold">{{ u.nome_completo }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold small">Perfil de Acesso</label>
+                                                <select name="perfil" class="form-select rounded-3">
+                                                    <option value="SOLICITANTE" {% if u.perfil == 'SOLICITANTE' %}selected{% endif %}>Solicitante</option>
+                                                    <option value="ATENDENTE" {% if u.perfil == 'ATENDENTE' %}selected{% endif %}>Atendente</option>
+                                                    <option value="ADMIN" {% if u.perfil == 'ADMIN' %}selected{% endif %}>Administrador</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold small">Aplicar Suspensão Manual (Dias de Bloqueio)</label>
+                                                <input type="number" name="dias_bloqueio" class="form-control rounded-3" min="0" max="365" placeholder="Deixe vazio para não alterar">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold small">Motivo da Suspensão (Exibido ao usuário)</label>
+                                                <input type="text" name="motivo_bloqueio" class="form-control rounded-3" value="{{ u.motivo_bloqueio|default:'' }}" placeholder="Ex: Extravio de equipamento emprestado">
+                                            </div>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" name="is_active" id="ativo{{ u.id }}" {% if u.is_active %}checked{% endif %}>
+                                                <label class="form-check-label fw-semibold small" for="ativo{{ u.id }}">Conta Ativa (desmarque para inativar usuário)</label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top-0 pt-0">
+                                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-submit rounded-pill px-4">Salvar Alterações</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">Nenhum usuário encontrado.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Usuário -->
+<div class="modal fade" id="modalNovoUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form method="POST" action="{% url 'gerenciar_usuarios' %}">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold">Cadastrar Novo Usuário</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nome Completo</label>
+                        <input type="text" name="nome_completo" class="form-control rounded-3" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">E-mail Institucional</label>
+                            <input type="email" name="email" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">RA / SIAPE</label>
+                            <input type="text" name="matricula" class="form-control rounded-3" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Telefone</label>
+                            <input type="text" name="telefone" class="form-control rounded-3" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Perfil</label>
+                            <select name="perfil" class="form-select rounded-3">
+                                <option value="SOLICITANTE">Solicitante</option>
+                                <option value="ATENDENTE">Atendente</option>
+                                <option value="ADMIN">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Senha Inicial</label>
+                        <input type="password" name="senha" class="form-control rounded-3" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-submit rounded-pill px-4">Cadastrar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
