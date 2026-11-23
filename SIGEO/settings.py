@@ -156,6 +156,9 @@ cloudinary.config(
     secure=True
 )
 
+# Necessário para compatibilidade com o django-cloudinary-storage no Django moderno
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticCloudinaryStorage'
+
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
