@@ -135,13 +135,14 @@ STATICFILES_DIRS = [
 AUTH_USER_MODEL = 'SIGEO.Usuario'
 
 # Configuração de E-mail (Modo de Produção - SMTP Gmail)
+# Configuração de E-mail (Lendo seguro do ambiente)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'sigeo.crpg@gmail.com' # Coloque o Gmail que vai enviar as mensagens
-EMAIL_HOST_PASSWORD = 'fpsi eehb fdla nxfc' # ATENÇÃO: Não é a sua senha normal!
-DEFAULT_FROM_EMAIL = 'SIGEO IFPR <sigeo.crpg@gmail.com>'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = f'SIGEO IFPR <{os.getenv("EMAIL_HOST_USER")}>'
 
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
