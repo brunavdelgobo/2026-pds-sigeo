@@ -167,7 +167,7 @@
 
                         {% if user.is_staff or user.perfil in 'ADMIN,ATENDENTE' %}
                             <li class="nav-item dropdown">
-                                <a class="nav-link sigeo-nav-link dropdown-toggle {% if request.resolver_match.url_name in 'validar_codigo,gerenciar_emprestimos,gerenciar_manutencao,gerenciar_objetos,gerenciar_usuarios' %}active{% endif %}" href="#" data-bs-toggle="dropdown">
+                                <a class="nav-link sigeo-nav-link dropdown-toggle {% if request.resolver_match.url_name in 'validar_codigo,gerenciar_emprestimos,gerenciar_manutencao,gerenciar_objetos,gerenciar_usuarios,configurar_parametros' %}active{% endif %}" href="#" data-bs-toggle="dropdown">
                                     <i class="bi bi-shield-check"></i> Gestão
                                 </a>
                                 <ul class="dropdown-menu shadow border-0 rounded-4 mt-2">
@@ -178,6 +178,7 @@
                                     {% if user.perfil == 'ADMIN' or user.is_superuser %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item py-2" href="{% url 'gerenciar_usuarios' %}"><i class="bi bi-people me-2 text-primary"></i>Gerenciar Usuários</a></li>
+                                        <li><a class="dropdown-item py-2" href="{% url 'configurar_parametros' %}"><i class="bi bi-sliders me-2 text-warning"></i>Parâmetros e Prazos</a></li>
                                         <li><a class="dropdown-item py-2" href="/admin/" target="_blank"><i class="bi bi-gear me-2 text-secondary"></i>Admin Django</a></li>
                                     {% endif %}
                                 </ul>

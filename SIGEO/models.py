@@ -164,3 +164,21 @@ class ItemEmprestimo(models.Model):
 
     def __str__(self):
         return f"Item: {self.objeto.nome_objeto} (Emp: #{self.emprestimo.id})"
+
+class ParametrosSistema(models.Model):
+    horas_expiracao_pedido = models.PositiveIntegerField(
+        default=24,
+        help_text="Tempo máximo (em horas) para o solicitante retirar o pedido antes de expirar."
+    )
+    dias_suspensao_atraso = models.PositiveIntegerField(
+        default=3,
+        help_text="Quantidade padrão de dias de bloqueio aplicada automaticamente em caso de devolução atrasada."
+    )
+
+    @classmethod
+    def carregar(cls):
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
+
+    def __str__(self):
+        return "Parâmetros Gerais do SIGEO"

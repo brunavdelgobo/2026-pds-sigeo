@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from .forms import UsuarioForm
-from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria, Subcategoria, Usuario
+from .models import Objeto, Emprestimo, ItemEmprestimo, Categoria, Subcategoria, Usuario, ParametrosSistema
 import uuid
 from django.utils import timezone
 from datetime import timedelta
@@ -335,11 +335,12 @@ def avaliar_devolucao(request, emprestimo_id):
             emprestimo.save()
 
             if estava_atrasado and itens_devolvidos_agora > 0:
+                params = ParametrosSistema.carregar()
                 solicitante = emprestimo.usuario
-                solicitante.bloqueado_ate = timezone.now() + timedelta(days=3)
+                solicitante.bloqueado_ate = timezone.now() + timedelta(days=params.dias_suspensao_atraso)
                 solicitante.motivo_bloqueio = f"Devolução em atraso referente ao Pedido #{emprestimo.id}."
                 solicitante.save()
-                mensagem = f"Devolução finalizada com atraso! O usuário {solicitante.nome_completo} foi suspenso por 3 dias."
+                mensagem = f"Devolução finalizada com atraso! O usuário {solicitante.nome_completo} foi suspenso por {params.dias_suspensao_atraso} dia(s)."
                 cor = 'warning'
             else:
                 mensagem = "Devolução finalizada! Todos os itens deste pedido foram retornados."
@@ -447,7 +448,8 @@ def revisar_pedido(request):
         if not itens_carrinho:
             return redirect('catalogo')
 
-        data_expiracao = timezone.now() + timedelta(hours=24)
+        params = ParametrosSistema.carregar()
+        data_expiracao = timezone.now() + timedelta(hours=params.horas_expiracao_pedido)
         codigo_ret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         codigo_dev = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
@@ -906,3 +908,48 @@ def cadastrar_subcategoria(request):
         messages.success(request, f"Subcategoria '{nome}' cadastrada com sucesso!")
 
     return redirect('gerenciar_objetos')
+
+@login_required(login_url='/login/')
+def configurar_parametros(request):
+    if not is_admin(request.user):
+        messages.error(request, "Acesso restrito aos administradores.")
+        return redirect('inicio')
+
+    parametros = ParametrosSistema.carregar()
+
+    if request.method == 'POST':
+        horas = int(request.POST.get('horas_expiracao_pedido', 24))
+        dias_suspensao = int(request.POST.get('dias_suspensao_atraso', 3))
+
+        parametros.horas_expiracao_pedido = max(1, horas)
+        parametros.dias_suspensao_atraso = max(1, dias_suspensao)
+        parametros.save()
+
+        messages.success(request, "Parâmetros gerais atualizados com sucesso!")
+        return redirect('configurar_parametros')
+
+    subcategorias = Subcategoria.objects.select_related('categoria').all().order_by(
+        'categoria__nome_categoria', 'nome_subcategoria'
+    )
+
+    return render(request, 'configurar_parametros.html', {
+        'parametros': parametros,
+        'subcategorias': subcategorias,
+    })
+
+
+@login_required(login_url='/login/')
+def editar_subcategoria(request, subcategoria_id):
+    if not is_admin(request.user):
+        return redirect('inicio')
+
+    subcat = get_object_or_404(Subcategoria, id=subcategoria_id)
+    if request.method == 'POST':
+        subcat.nome_subcategoria = request.POST.get('nome_subcategoria', subcat.nome_subcategoria).strip()
+        subcat.limite_max_itens = max(1, int(request.POST.get('limite_max_itens', subcat.limite_max_itens)))
+        subcat.prazo_valor = max(1, int(request.POST.get('prazo_valor', subcat.prazo_valor)))
+        subcat.prazo_unidade = request.POST.get('prazo_unidade', subcat.prazo_unidade)
+        subcat.save()
+        messages.success(request, f"Política de prazo de '{subcat.nome_subcategoria}' atualizada!")
+
+    return redirect('configurar_parametros')

@@ -48,6 +48,8 @@ urlpatterns = [
     path("liberar-bloqueio/<int:usuario_id>/", views.liberar_bloqueio, name="liberar_bloqueio"),
     path("cadastrar-categoria/", views.cadastrar_categoria, name="cadastrar_categoria"),
     path("cadastrar-subcategoria/", views.cadastrar_subcategoria, name="cadastrar_subcategoria"),
+    path("parametros/", views.configurar_parametros, name="configurar_parametros"),
+    path("editar-subcategoria/<int:subcategoria_id>/", views.editar_subcategoria, name="editar_subcategoria"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
