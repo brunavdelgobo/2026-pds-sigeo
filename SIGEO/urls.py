@@ -50,6 +50,7 @@ urlpatterns = [
     path("cadastrar-subcategoria/", views.cadastrar_subcategoria, name="cadastrar_subcategoria"),
     path("parametros/", views.configurar_parametros, name="configurar_parametros"),
     path("editar-subcategoria/<int:subcategoria_id>/", views.editar_subcategoria, name="editar_subcategoria"),
+    path("relatorios/", views.dashboard_relatorios, name="dashboard_relatorios"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

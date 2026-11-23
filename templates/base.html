@@ -175,6 +175,7 @@
                                     <li><a class="dropdown-item py-2" href="{% url 'gerenciar_emprestimos' %}"><i class="bi bi-list-check me-2 text-success"></i>Todos os Empréstimos</a></li>
                                     <li><a class="dropdown-item py-2" href="{% url 'gerenciar_objetos' %}"><i class="bi bi-box-seam me-2" style="color:#4f46e5;"></i>Objetos do Acervo</a></li>
                                     <li><a class="dropdown-item py-2" href="{% url 'gerenciar_manutencao' %}"><i class="bi bi-tools me-2 text-danger"></i>Manutenção</a></li>
+                                    <li><a class="dropdown-item py-2" href="{% url 'dashboard_relatorios' %}"><i class="bi bi-bar-chart-line me-2 text-info"></i>Relatórios e Gráficos</a></li>
                                     {% if user.perfil == 'ADMIN' or user.is_superuser %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item py-2" href="{% url 'gerenciar_usuarios' %}"><i class="bi bi-people me-2 text-primary"></i>Gerenciar Usuários</a></li>

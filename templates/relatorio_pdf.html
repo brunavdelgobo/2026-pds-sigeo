@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Relatório de Inventário</title>
+    <title>Relatório de Inventário - SIGEO</title>
     <style>
         @page {
             size: A4 portrait;
@@ -18,19 +18,23 @@
         body {
             font-family: Helvetica, Arial, sans-serif;
             color: #333333;
-            font-size: 12px;
+            font-size: 11px;
         }
         .cabecalho {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #4f46e5;
+            padding-bottom: 12px;
         }
         .cabecalho h1 {
             color: #2c3e50;
-            margin-bottom: 5px;
+            margin: 0 0 5px 0;
+            font-size: 20px;
         }
         .cabecalho p {
             color: #7f8c8d;
             font-size: 10px;
+            margin: 0;
         }
         .resumo-box {
             background-color: #f8f9fa;
@@ -38,6 +42,7 @@
             padding: 10px;
             margin-bottom: 20px;
             text-align: center;
+            font-size: 11px;
         }
         table.tabela-dados {
             width: 100%;
@@ -53,45 +58,43 @@
         }
         table.tabela-dados td {
             border-bottom: 1px solid #ddd;
-            padding: 8px;
+            padding: 7px 8px;
         }
-        /* Efeito zebrado para facilitar a leitura */
         table.tabela-dados tr:nth-child(even) {
-            background-color: #f2f2f2;
+            background-color: #f6f8fa;
         }
         .status-disponivel { color: #27ae60; font-weight: bold; }
-        .status-emprestado { color: #e67e22; font-weight: bold; }
-        .status-manutencao { color: #c0392b; font-weight: bold; }
+        .status-emprestado { color: #2980b9; font-weight: bold; }
+        .status-manutencao { color: #d35400; font-weight: bold; }
+        .status-inativo { color: #7f8c8d; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <!-- Rodapé fixo com paginação (Oculto no corpo, renderizado pelo @page) -->
     <div id="footer_content" style="text-align: right; font-size: 9px; color: #666;">
-        Página <pdf:pagenumber> de <pdf:pagecount>
+        SIGEO - Sistema de Gestão de Empréstimos de Objetos &nbsp;|&nbsp; Página <pdf:pagenumber> de <pdf:pagecount>
     </div>
 
-    <!-- Cabeçalho -->
     <div class="cabecalho">
         <h1>Relatório de Inventário - SIGEO</h1>
         <p>Gerado em: {{ data_geracao|date:"d/m/Y H:i" }}</p>
     </div>
 
-    <!-- Quadro de Resumo -->
     <div class="resumo-box">
-        <strong>Total de Itens:</strong> {{ total }} &nbsp;|&nbsp;
+        <strong>Total:</strong> {{ total }} &nbsp;|&nbsp;
         <span style="color: #27ae60;"><strong>Disponíveis:</strong> {{ disponiveis }}</span> &nbsp;|&nbsp;
-        <span style="color: #e67e22;"><strong>Emprestados:</strong> {{ emprestados }}</span> &nbsp;|&nbsp;
-        <span style="color: #c0392b;"><strong>Em Manutenção:</strong> {{ manutencao }}</span>
+        <span style="color: #2980b9;"><strong>Emprestados:</strong> {{ emprestados }}</span> &nbsp;|&nbsp;
+        <span style="color: #d35400;"><strong>Manutenção:</strong> {{ manutencao }}</span> &nbsp;|&nbsp;
+        <span style="color: #7f8c8d;"><strong>Inativos:</strong> {{ inativos }}</span>
     </div>
 
-    <!-- Tabela Principal -->
     <table class="tabela-dados">
         <thead>
             <tr>
                 <th>Patrimônio</th>
                 <th>Objeto</th>
                 <th>Subcategoria</th>
+                <th>Data Cadastro</th>
                 <th>Condição</th>
                 <th>Status</th>
             </tr>
@@ -102,13 +105,14 @@
                 <td>{{ obj.cg_patrimonio|default:"S/N" }}</td>
                 <td>{{ obj.nome_objeto }}</td>
                 <td>{{ obj.subcategoria|default:"Sem Subcategoria" }}</td>
+                <td>{{ obj.data_cadastro|date:"d/m/Y" }}</td>
                 <td>{{ obj.get_condicao_display }}</td>
                 <td>
-                    <!-- Colore o status dinamicamente -->
                     <span class="
                         {% if obj.status == 'DISPONIVEL' %}status-disponivel
                         {% elif obj.status == 'EMPRESTADO' %}status-emprestado
                         {% elif obj.status == 'MANUTENCAO' %}status-manutencao
+                        {% elif obj.status == 'INATIVO' %}status-inativo
                         {% endif %}
                     ">
                         {{ obj.get_status_display }}

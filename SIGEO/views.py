@@ -13,6 +13,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 import csv
+import json
 from django.core.mail import send_mail
 from collections import Counter
 from django.contrib import messages
@@ -619,7 +620,9 @@ def relatorio_inventario_pdf(request):
     if not is_atendente_ou_admin(request.user):
         return redirect('painel')
 
-    objetos = Objeto.objects.all().order_by('subcategoria', 'nome_objeto')
+    objetos = Objeto.objects.select_related('subcategoria', 'subcategoria__categoria').all().order_by(
+        'subcategoria__categoria__nome_categoria', 'subcategoria__nome_subcategoria', 'nome_objeto'
+    )
 
     contexto = {
         'objetos': objetos,
@@ -627,7 +630,8 @@ def relatorio_inventario_pdf(request):
         'disponiveis': objetos.filter(status='DISPONIVEL').count(),
         'emprestados': objetos.filter(status='EMPRESTADO').count(),
         'manutencao': objetos.filter(status='MANUTENCAO').count(),
-        'data_geracao': timezone.now()
+        'inativos': objetos.filter(status='INATIVO').count(),
+        'data_geracao': timezone.localtime(timezone.now())
     }
 
     template = get_template('relatorio_pdf.html')
@@ -645,6 +649,65 @@ def relatorio_inventario_pdf(request):
 
 
 @login_required(login_url='/login/')
+def dashboard_relatorios(request):
+    if not is_atendente_ou_admin(request.user):
+        messages.error(request, "Você não tem permissão para acessar os relatórios.")
+        return redirect('inicio')
+
+    total_emprestimos = Emprestimo.objects.count()
+    ativos = Emprestimo.objects.filter(status_geral='ATIVO').count()
+    concluidos = Emprestimo.objects.filter(status_geral='CONCLUIDO').count()
+    expirados_cancelados = Emprestimo.objects.filter(status_geral__in=['EXPIRADO', 'CANCELADO']).count()
+
+    atrasados_agora = sum(
+        1 for emp in Emprestimo.objects.filter(status_geral='ATIVO') if emp.esta_atrasado()
+    )
+
+    usuarios_suspensos = Usuario.objects.filter(bloqueado_ate__gt=timezone.now()).count()
+
+    # Situação do Acervo (Gráfico de Rosca)
+    acervo_labels = ['Disponíveis', 'Emprestados', 'Em Manutenção', 'Inativos']
+    acervo_valores = [
+        Objeto.objects.filter(status='DISPONIVEL').count(),
+        Objeto.objects.filter(status='EMPRESTADO').count(),
+        Objeto.objects.filter(status='MANUTENCAO').count(),
+        Objeto.objects.filter(status='INATIVO').count(),
+    ]
+
+    # Top 5 Subcategorias Mais Emprestadas (Gráfico de Barras)
+    ranking_subcategorias = (
+        ItemEmprestimo.objects
+        .values('objeto__subcategoria__nome_subcategoria')
+        .annotate(total=Count('id'))
+        .order_by('-total')[:5]
+    )
+    top_labels = [item['objeto__subcategoria__nome_subcategoria'] for item in ranking_subcategorias]
+    top_valores = [item['total'] for item in ranking_subcategorias]
+
+    # Status dos Pedidos (Gráfico de Barras Horizontais)
+    pedidos_labels = ['Pendentes', 'Ativos', 'Concluídos', 'Expirados/Cancelados']
+    pedidos_valores = [
+        Emprestimo.objects.filter(status_geral='PENDENTE').count(),
+        ativos,
+        concluidos,
+        expirados_cancelados,
+    ]
+
+    return render(request, 'relatorios.html', {
+        'total_emprestimos': total_emprestimos,
+        'ativos': ativos,
+        'concluidos': concluidos,
+        'atrasados_agora': atrasados_agora,
+        'usuarios_suspensos': usuarios_suspensos,
+        'acervo_labels_json': json.dumps(acervo_labels),
+        'acervo_valores_json': json.dumps(acervo_valores),
+        'top_labels_json': json.dumps(top_labels),
+        'top_valores_json': json.dumps(top_valores),
+        'pedidos_labels_json': json.dumps(pedidos_labels),
+        'pedidos_valores_json': json.dumps(pedidos_valores),
+    })
+
+@login_required(login_url='/login/')
 def relatorio_inventario_csv(request):
     if not is_atendente_ou_admin(request.user):
         return redirect('painel')
@@ -655,20 +718,22 @@ def relatorio_inventario_csv(request):
     response.write('\ufeff')
 
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Patrimônio', 'Objeto', 'Subcategoria', 'Condição', 'Status Atual'])
+    # Adicionado 'Data de Cadastro' no cabeçalho
+    writer.writerow(['Patrimônio', 'Objeto', 'Subcategoria', 'Data de Cadastro', 'Condição', 'Status Atual'])
 
     objetos = Objeto.objects.all().order_by('subcategoria', 'nome_objeto')
     for obj in objetos:
+        data_cad = obj.data_cadastro.strftime('%d/%m/%Y') if hasattr(obj, 'data_cadastro') and obj.data_cadastro else '-'
         writer.writerow([
             obj.cg_patrimonio if obj.cg_patrimonio else 'S/N',
             obj.nome_objeto,
             str(obj.subcategoria) if obj.subcategoria else 'Sem Subcategoria',
+            data_cad, # Adicionado aqui
             obj.get_condicao_display(),
             obj.get_status_display()
         ])
 
     return response
-
 
 @login_required(login_url='/login/')
 def aumentar_qtd_pedido(request, subcategoria_id):
