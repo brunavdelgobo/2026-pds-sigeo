@@ -31,7 +31,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     matricula = models.CharField(max_length=20, unique=True)
     telefone = models.CharField(max_length=20)
     perfil = models.CharField(max_length=15, choices=PERFIS, default='SOLICITANTE')
-    foto_perfil = models.ImageField(upload_to='perfis/', null=True, blank=True)
+    foto_perfil = models.ImageField(upload_to='perfis/', max_length=255, null=True, blank=True)
+    bloqueado_ate = models.DateTimeField(null=True, blank=True)
+    motivo_bloqueio = models.CharField(max_length=255, null=True, blank=True)
 
     # Campos de controle nativos do Django
     is_active = models.BooleanField(default=True)
@@ -39,8 +41,19 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     objects = UsuarioManager()
 
-    USERNAME_FIELD = 'email'  # Define o email como chave de login
+    USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['matricula', 'nome_completo']
+
+    @property
+    def esta_bloqueado(self):
+        return bool(self.bloqueado_ate and self.bloqueado_ate > timezone.now())
+
+    def save(self, *args, **kwargs):
+        if self.perfil in ['ADMIN', 'ATENDENTE'] or self.is_superuser:
+            self.is_staff = True
+        else:
+            self.is_staff = False
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.nome_completo
@@ -70,7 +83,7 @@ class Subcategoria(models.Model):
     limite_max_itens = models.PositiveIntegerField(default=1)
     prazo_valor = models.PositiveIntegerField(default=1, help_text="Ex: 3")
     prazo_unidade = models.CharField(max_length=10, choices=UNIDADES_TEMPO, default='DIAS', help_text="Horas ou Dias")
-    imagem = models.ImageField(upload_to='imagens_catalogo/', null=True, blank=True)
+    imagem = models.ImageField(upload_to='imagens_catalogo/', max_length=255, null=True, blank=True)
 
     def __str__(self):
         # Vai aparecer no Admin ex: "Bolas de Vôlei (3 Horas)"

@@ -40,6 +40,14 @@ urlpatterns = [
     path('recuperar-senha/enviado/', auth_views.PasswordResetDoneView.as_view(template_name='senha_reset_done.html'), name='password_reset_done'),
     path('recuperar-senha/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='senha_reset_confirm.html'), name='password_reset_confirm'),
     path('recuperar-senha/concluido/', auth_views.PasswordResetCompleteView.as_view(template_name='senha_reset_complete.html'), name='password_reset_complete'),
+    path("gerenciar-objetos/", views.gerenciar_objetos, name="gerenciar_objetos"),
+    path("editar-objeto/<int:objeto_id>/", views.editar_objeto, name="editar_objeto"),
+    path("alternar-status-objeto/<int:objeto_id>/", views.alternar_status_objeto, name="alternar_status_objeto"),
+    path("gerenciar-usuarios/", views.gerenciar_usuarios, name="gerenciar_usuarios"),
+    path("alterar-usuario/<int:usuario_id>/", views.alterar_usuario, name="alterar_usuario"),
+    path("liberar-bloqueio/<int:usuario_id>/", views.liberar_bloqueio, name="liberar_bloqueio"),
+    path("cadastrar-categoria/", views.cadastrar_categoria, name="cadastrar_categoria"),
+    path("cadastrar-subcategoria/", views.cadastrar_subcategoria, name="cadastrar_subcategoria"),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
