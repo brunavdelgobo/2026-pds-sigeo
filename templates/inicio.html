@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4 align-items-stretch">
+        <!-- Coluna Principal (Esquerda) -->
+        <div class="col-lg-8 d-flex flex-column justify-content-between">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 p-md-5 mb-4" style="border-color: rgba(0,0,0,0.06) !important;">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold mb-3 align-self-start">
+                    Perfil: {{ user.get_perfil_display }}
+                </span>
+                <h1 class="fw-bold display-6 mb-3" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Olá, {{ user.nome_completo }}!
+                </h1>
+                <p class="text-muted fs-5 mb-4">
+                    Seja bem-vindo(a) ao <strong>SIGEO</strong>. Gerencie seus empréstimos de forma simples, rápida e organizada.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'catalogo' %}" class="btn btn-submit px-4 py-3 rounded-pill fw-semibold shadow-sm">
+                        <i class="bi bi-grid me-2"></i> Explorar Catálogo
+                    </a>
+                    <a href="{% url 'painel' %}" class="btn btn-outline-secondary px-4 py-3 rounded-pill fw-semibold">
+                        <i class="bi bi-clock-history me-2"></i> Ver Meus Empréstimos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-success fs-3 mb-1"><i class="bi bi-box-seam"></i></div>
+                            <h3 class="fw-bold text-dark mb-1">{{ total_disponiveis }}</h3>
+                            <p class="text-muted small mb-0">Itens disponíveis no acervo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-primary fs-3 mb-1"><i class="bi bi-arrow-left-right"></i></div>
+                            <h3 class="fw-bold text-dark mb-1">{{ meus_ativos }}</h3>
+                            <p class="text-muted small mb-0">Empréstimos ativos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-secondary fs-3 mb-1"><i class="bi bi-check2-circle"></i></div>
+                            <h3 class="fw-bold text-dark mb-1">{{ meus_concluidos }}</h3>
+                            <p class="text-muted small mb-0">Empréstimos concluídos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna de Destaque (Direita) -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 overflow-hidden d-flex flex-column">
+                <div class="card-header bg-white py-3 px-4 border-bottom border-light">
+                    <h5 class="mb-0 fw-bold text-dark fs-6">
+                        <i class="bi bi-bookmark-star me-2 text-primary"></i> Empréstimo em Destaque
+                    </h5>
+                </div>
+
+                {% if emprestimo_destaque %}
+                    {% with primeiro_item=emprestimo_destaque.itens.first %}
+                        {% if primeiro_item and primeiro_item.objeto.subcategoria.imagem %}
+                            <img src="{{ primeiro_item.objeto.subcategoria.imagem.url }}" class="card-img-top" alt="{{ primeiro_item.objeto.nome_objeto }}" style="height: 190px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light d-flex justify-content-center align-items-center border-bottom" style="height: 190px;">
+                                <i class="bi bi-box-seam text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body p-4 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold text-secondary small">#Pedido {{ emprestimo_destaque.id }}</span>
+                                    <span class="badge rounded-pill px-3 py-1 {% if emprestimo_destaque.status_geral == 'ATIVO' %}bg-primary bg-opacity-10 text-primary{% else %}bg-warning bg-opacity-10 text-dark{% endif %}">
+                                        {{ emprestimo_destaque.get_status_geral_display }}
+                                    </span>
+                                </div>
+
+                                <h5 class="fw-bold text-dark mb-2">
+                                    {% if primeiro_item %}{{ primeiro_item.objeto.nome_objeto }}{% else %}Itens Solicitados{% endif %}
+                                    {% if emprestimo_destaque.itens.count > 1 %}
+                                        <span class="text-muted fw-normal fs-6">(+{{ emprestimo_destaque.itens.count|add:"-1" }} item)</span>
+                                    {% endif %}
+                                </h5>
+
+                                <p class="text-muted small mb-3">
+                                    <i class="bi bi-calendar-event me-1 text-primary"></i>
+                                    {% if emprestimo_destaque.status_geral == 'ATIVO' %}
+                                        <strong>Devolver até:</strong>
+                                    {% else %}
+                                        <strong>Retirar até:</strong>
+                                    {% endif %}
+                                    {{ emprestimo_destaque.data_expiracao|date:"d/m/Y H:i" }}
+                                </p>
+                            </div>
+
+                            <a href="{% url 'painel' %}" class="btn btn-submit w-100 py-2 rounded-pill fw-semibold">
+                                <i class="bi bi-qr-code me-1"></i> Ver Código / QR Code
+                            </a>
+                        </div>
+                    {% endwith %}
+                {% else %}
+                    <div class="card-body p-4 d-flex flex-column justify-content-center align-items-center text-center">
+                        <i class="bi bi-inbox display-4 text-secondary opacity-50 mb-3"></i>
+                        <h6 class="fw-bold text-dark">Nenhum pedido em andamento</h6>
+                        <p class="text-muted small mb-4">Quando você reservar ou retirar um equipamento, ele aparecerá aqui com o prazo de devolução.</p>
+                        <a href="{% url 'catalogo' %}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold">
+                            Reservar Agora
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

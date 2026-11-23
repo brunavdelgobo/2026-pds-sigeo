@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container py-4">
     <!-- Cabeçalho da Página com Título em Degradê -->
-    <div class="row mb-5 align-items-center">
+    <div class="row mb-4 align-items-center">
         <div class="col">
             <h1 class="fw-bold display-6 mb-2" style="background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                 Catálogo de Acervo Disponível
@@ -12,18 +12,25 @@
         </div>
     </div>
 
-    <!-- ALERTA DE BLOQUEIO NO TOPO -->
+    <!-- ALERTA ÚNICO DE BLOQUEIO NO TOPO -->
     {% if usuario_bloqueado %}
-    <div class="alert alert-danger shadow-sm text-center border-0 rounded-4 py-3" role="alert">
-        <strong>Atenção!</strong> Você possui materiais com devolução em atraso.
-        Novas solicitações estão <strong>bloqueadas</strong> até a regularização.
-    </div>
-    {% endif %}
-    <!-- ALERTA DE BLOQUEIO NO TOPO -->
-    {% if usuario_bloqueado %}
-    <div class="alert alert-danger shadow-sm text-center border-0 rounded-4" role="alert">
-        <strong>Atenção!</strong> Você possui materiais com devolução em atraso.
-        Novas solicitações estão <strong>bloqueadas</strong> até a regularização.
+    <div class="alert alert-danger shadow-sm border-0 rounded-4 p-4 mb-4 d-flex align-items-center gap-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-2 text-danger"></i>
+        <div>
+            <h6 class="fw-bold mb-1">Solicitações temporariamente bloqueadas</h6>
+            {% if user.esta_bloqueado %}
+                <p class="mb-0 small">
+                    Seu acesso para novos pedidos está suspenso até <strong>{{ user.bloqueado_ate|date:"d/m/Y \à\s H:i" }}</strong>.
+                    {% if user.motivo_bloqueio %}
+                        <br><strong>Motivo:</strong> {{ user.motivo_bloqueio }}
+                    {% endif %}
+                </p>
+            {% elif tem_atraso %}
+                <p class="mb-0 small">
+                    Você possui materiais com <strong>devolução em atraso</strong>. Novas solicitações estão bloqueadas até a regularização no balcão.
+                </p>
+            {% endif %}
+        </div>
     </div>
     {% endif %}
 
@@ -51,7 +58,6 @@
     <div class="row">
         {% for subcat in subcategorias %}
             <div class="col-md-4 mb-4">
-                <!-- Cartão Moderno com fundo branco e borda sutil -->
                 <div class="card h-100 shadow-sm border rounded-4 bg-white overflow-hidden" style="border-color: rgba(0,0,0,0.06) !important; transition: transform 0.2s ease, box-shadow 0.2s ease;">
 
                     <!-- ÁREA DA IMAGEM DO ITEM -->
@@ -65,7 +71,6 @@
                             </div>
                         </div>
                     {% endif %}
-                    <!-- FIM DA ÁREA DA IMAGEM -->
 
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -93,11 +98,12 @@
                             <form method="POST" action="{% url 'adicionar_ao_pedido' subcat.id %}" class="d-flex gap-2">
                                 {% csrf_token %}
                                 <input type="number" name="quantidade" class="form-control text-center fw-bold" value="1" min="1" max="{{ subcat.qtd_disponivel }}" style="width: 75px;">
-                                <!-- Botão com o degradê roxo/azul padrão -->
                                 <button type="submit" class="btn btn-submit w-100 m-0 py-2">Adicionar</button>
                             </form>
                         {% else %}
-                            <button class="btn btn-secondary w-100 py-2 rounded-3" disabled>Bloqueado (Em atraso)</button>
+                            <button class="btn btn-secondary w-100 py-2 rounded-3" disabled>
+                                <i class="bi bi-lock-fill me-1"></i> Bloqueado
+                            </button>
                         {% endif %}
                     </div>
                 </div>
