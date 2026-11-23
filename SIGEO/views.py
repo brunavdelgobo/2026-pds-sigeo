@@ -16,6 +16,15 @@ import csv
 from django.core.mail import send_mail
 from collections import Counter
 from django.contrib import messages
+from .notificacoes import (
+    notificar_solicitacao_criada,
+    notificar_retirada_confirmada,
+    notificar_devolucao_confirmada,
+    notificar_lembrete_vencimento,
+    notificar_atraso,
+    notificar_suspensao,
+    notificar_cancelamento,
+)
 
 
 def is_atendente_ou_admin(user):
@@ -64,6 +73,34 @@ def limpar_emprestimos_expirados():
                 f"Atenciosamente,\nEquipe SIGEO - IFPR"
             )
 
+def verificar_notificacoes_pendentes():
+    agora = timezone.now()
+    limite_aviso = agora + timedelta(hours=2)
+
+    # 1. Lembrete de vencimento próximo (faltando até 2h)
+    proximos = Emprestimo.objects.filter(
+        status_geral='ATIVO',
+        data_expiracao__gt=agora,
+        data_expiracao__lte=limite_aviso,
+        aviso_vencimento_enviado=False
+    ).select_related('usuario')
+
+    for emp in proximos:
+        notificar_lembrete_vencimento(emp)
+        emp.aviso_vencimento_enviado = True
+        emp.save(update_fields=['aviso_vencimento_enviado'])
+
+    # 2. Aviso de atraso efetivo
+    atrasados = Emprestimo.objects.filter(
+        status_geral='ATIVO',
+        data_expiracao__lt=agora,
+        aviso_atraso_enviado=False
+    ).select_related('usuario')
+
+    for emp in atrasados:
+        notificar_atraso(emp)
+        emp.aviso_atraso_enviado = True
+        emp.save(update_fields=['aviso_atraso_enviado'])
 
 def registrar(request):
     if request.method == 'POST':
@@ -112,6 +149,7 @@ def logout_view(request):
 @login_required(login_url='/login/')
 def inicio(request):
     limpar_emprestimos_expirados()
+    verificar_notificacoes_pendentes()
 
     total_disponiveis = Objeto.objects.filter(status='DISPONIVEL').count()
     meus_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO').count()
@@ -134,6 +172,7 @@ def inicio(request):
 @login_required(login_url='/login/')
 def painel(request):
     limpar_emprestimos_expirados()
+    verificar_notificacoes_pendentes()
     meus_emprestimos = Emprestimo.objects.filter(usuario=request.user).order_by('-id')
 
     contexto = {
@@ -146,6 +185,7 @@ def painel(request):
 @login_required(login_url='/login/')
 def catalogo_objetos(request):
     limpar_emprestimos_expirados()
+    verificar_notificacoes_pendentes()
 
     tem_atraso = False
     emprestimos_ativos = Emprestimo.objects.filter(usuario=request.user, status_geral='ATIVO')
@@ -238,6 +278,7 @@ def validar_codigo(request):
         if emprestimo_retirada:
             emprestimo_retirada.status_geral = 'ATIVO'
             emprestimo_retirada.save()
+            notificar_retirada_confirmada(emprestimo_retirada)
 
             mensagem = f"Retirada confirmada! Objeto liberado para {emprestimo_retirada.usuario.nome_completo}."
             cor_mensagem = "success"
@@ -292,7 +333,7 @@ def cancelar_emprestimo(request, emprestimo_id):
         if item.objeto:
             item.objeto.status = 'DISPONIVEL'
             item.objeto.save()
-
+    notificar_cancelamento(emprestimo)
     return redirect('painel')
 
 
@@ -333,6 +374,7 @@ def avaliar_devolucao(request, emprestimo_id):
         if ainda_pendentes == 0:
             emprestimo.status_geral = 'CONCLUIDO'
             emprestimo.save()
+            notificar_devolucao_confirmada(emprestimo, parcial=False)
 
             if estava_atrasado and itens_devolvidos_agora > 0:
                 params = ParametrosSistema.carregar()
@@ -340,12 +382,15 @@ def avaliar_devolucao(request, emprestimo_id):
                 solicitante.bloqueado_ate = timezone.now() + timedelta(days=params.dias_suspensao_atraso)
                 solicitante.motivo_bloqueio = f"Devolução em atraso referente ao Pedido #{emprestimo.id}."
                 solicitante.save()
+                notificar_suspensao(solicitante)
                 mensagem = f"Devolução finalizada com atraso! O usuário {solicitante.nome_completo} foi suspenso por {params.dias_suspensao_atraso} dia(s)."
                 cor = 'warning'
             else:
                 mensagem = "Devolução finalizada! Todos os itens deste pedido foram retornados."
                 cor = 'success'
         else:
+            if itens_devolvidos_agora > 0:
+                notificar_devolucao_confirmada(emprestimo, parcial=True)
             mensagem = f"Devolução PARCIAL registrada! {itens_devolvidos_agora} item(ns) retornado(s). O aluno ainda precisa devolver {ainda_pendentes} item(ns)."
             cor = 'success'
 
@@ -485,6 +530,7 @@ def revisar_pedido(request):
 
         request.session['carrinho'] = []
         request.session.modified = True
+        notificar_solicitacao_criada(novo_emprestimo)
 
         return redirect('painel')
 
@@ -841,13 +887,18 @@ def alterar_usuario(request, usuario_id):
             alvo.perfil = novo_perfil
         alvo.is_active = ativo
 
+        aplicou_bloqueio = False
         if dias_bloqueio and int(dias_bloqueio) > 0:
             alvo.bloqueado_ate = timezone.now() + timedelta(days=int(dias_bloqueio))
             alvo.motivo_bloqueio = motivo if motivo else "Suspensão administrativa aplicada pela coordenação."
+            aplicou_bloqueio = True
         elif motivo and alvo.esta_bloqueado:
             alvo.motivo_bloqueio = motivo
 
         alvo.save()
+        if aplicou_bloqueio:
+            notificar_suspensao(alvo)
+
         messages.success(request, f"Dados e permissões de {alvo.nome_completo} atualizados!")
 
     return redirect('gerenciar_usuarios')
